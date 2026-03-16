@@ -34,10 +34,23 @@ function StarRating({ rating }) {
   )
 }
 
+const colorMap = {
+  amber: '#f59e0b',
+  violet: '#7c3aed',
+  blue: '#3b82f6',
+  green: '#10b981',
+  pink: '#ec4899',
+  red: '#ef4444',
+}
+
+function resolveColor(raw) {
+  return colorMap[raw] || raw || '#7c3aed'
+}
+
 function ToolCard({ tool }) {
   const [hovered, setHovered] = useState(false)
-  const accentColor = tool.accent_color || tool.accentColor || '#7c3aed'
-  const badgeColor = tool.badge_color || tool.badgeColor || '#7c3aed'
+  const accentColor = resolveColor(tool.accent_color || tool.accentColor)
+  const badgeColor = resolveColor(tool.badge_color || tool.badgeColor)
   const href = tool.url || tool.href || '#'
 
   return (
