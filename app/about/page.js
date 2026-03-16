@@ -1,9 +1,6 @@
-import Link from 'next/link'
+'use client'
 
-export const metadata = {
-  title: 'About',
-  description: 'Learn about NexanLab — the curated AI tools directory.',
-}
+import Link from 'next/link'
 
 export default function AboutPage() {
   const stats = [
