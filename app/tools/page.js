@@ -1,5 +1,11 @@
 'use client'
 
+export const metadata = {
+  title: 'Discover AI Tools',
+  description: 'Browse 500+ curated AI tools for writing, design, video, code and productivity.',
+  alternates: { canonical: '/tools' },
+}
+
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
