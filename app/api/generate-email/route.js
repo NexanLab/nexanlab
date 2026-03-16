@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
   try {
@@ -10,8 +10,6 @@ export async function POST(request) {
     if (!senderName || !recipientCompany || !purpose) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
     const prompt = `Write a professional cold email with the following details:
 
@@ -34,12 +32,22 @@ Subject: [subject line here]
 
 [email body here]`
 
-    const result = await model.generateContent(prompt)
-    const text = result.response.text()
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      max_tokens: 500,
+    })
+
+    const text = completion.choices[0]?.message?.content || ''
 
     return NextResponse.json({ email: text })
   } catch (error) {
-    console.error('Gemini error:', error)
+    console.error('Groq error:', error)
     return NextResponse.json({ error: 'Failed to generate email' }, { status: 500 })
   }
 }
