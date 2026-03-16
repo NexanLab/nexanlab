@@ -545,7 +545,7 @@ function FeaturedToolsSection() {
             Bu Hafta En Çok Kullanılanlar
           </h2>
         </div>
-        <a href="/araclar" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <a href="/tools" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
           Tümünü Gör →
         </a>
       </div>
@@ -588,7 +588,7 @@ function WhySection() {
           <p style={{ color: '#8b8ba0', lineHeight: '1.7', marginBottom: '32px', fontSize: '15px' }}>
             Yüzlerce AI aracı arasında kaybolmak zorunda değilsin. NexanLab, ihtiyacına en uygun araçları bulman için tasarlandı. Küratörlü listeler, dürüst değerlendirmeler ve haftalık güncellemelerle her zaman en iyi seçeneklere ulaşırsın.
           </p>
-          <a href="/araclar" style={{
+          <a href="/tools" style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
             padding: '12px 24px', background: '#7c3aed', color: 'white',
             borderRadius: '12px', textDecoration: 'none', fontSize: '14px', fontWeight: '600',
@@ -729,10 +729,10 @@ function NewsletterSection() {
 function Footer() {
   const footerLinks = {
     Araçlar: [
-      { label: 'Tüm Araçlar', href: '/araclar' },
-      { label: 'Öne Çıkanlar', href: '/araclar?filter=featured' },
-      { label: 'Yeni Eklenenler', href: '/araclar?filter=new' },
-      { label: 'Ücretsiz Araçlar', href: '/araclar?filter=free' },
+      { label: 'Tüm Araçlar', href: '/tools' },
+      { label: 'Öne Çıkanlar', href: '/tools?filter=featured' },
+      { label: 'Yeni Eklenenler', href: '/tools?filter=new' },
+      { label: 'Ücretsiz Araçlar', href: '/tools?filter=free' },
     ],
     Kategoriler: [
       { label: 'Yazı & İçerik', href: '/kategoriler/yazi' },

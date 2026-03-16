@@ -89,7 +89,7 @@ export default function ColdEmailGenerator() {
               Nexan<span style={{ color: '#7c3aed' }}>Lab</span>
             </span>
           </Link>
-          <Link href="/araclar" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>
+          <Link href="/tools" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>
             ← Back to Tools
           </Link>
         </div>
