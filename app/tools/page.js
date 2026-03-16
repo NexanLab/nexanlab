@@ -264,8 +264,8 @@ function ToolCard({ tool }) {
           </div>
         </div>
         <a
-          href={tool.url}
-          target="_blank"
+          href={tool.url.startsWith('http') ? tool.url : tool.url}
+          target={tool.url.startsWith('http') ? '_blank' : '_self'}
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           style={{
@@ -276,7 +276,7 @@ function ToolCard({ tool }) {
             background: `${accentColor}10`, color: accentColor,
           }}
         >
-          Visit ↗
+          {tool.url.startsWith('http') ? 'Visit ↗' : 'Try it →'}
         </a>
       </div>
     </div>
