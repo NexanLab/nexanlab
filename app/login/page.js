@@ -5,14 +5,14 @@ import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export default function Giris() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  async function girisYap(e) {
+  async function handleLogin(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -20,7 +20,7 @@ export default function Giris() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Email veya şifre hatalı.')
+      setError('Invalid email or password. Please try again.')
     } else {
       router.push('/panel')
     }
@@ -65,13 +65,13 @@ export default function Giris() {
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
         }}>
           <h1 style={{ color: 'white', fontSize: '24px', fontWeight: '700', marginBottom: '8px', textAlign: 'center' }}>
-            Tekrar Hoş Geldin
+            Welcome Back
           </h1>
           <p style={{ color: '#8b8ba0', fontSize: '14px', textAlign: 'center', marginBottom: '32px' }}>
-            Hesabına giriş yap
+            Sign in to your account
           </p>
 
-          <form onSubmit={girisYap}>
+          <form onSubmit={handleLogin}>
             {error && (
               <div style={{
                 padding: '12px 16px', borderRadius: '10px', marginBottom: '20px',
@@ -90,7 +90,7 @@ export default function Giris() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@adresin.com"
+                placeholder="you@example.com"
                 required
                 style={{
                   width: '100%', height: '44px', padding: '0 16px',
@@ -102,13 +102,13 @@ export default function Giris() {
 
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
-                Şifre
+                Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Şifren"
+                placeholder="Your password"
                 required
                 style={{
                   width: '100%', height: '44px', padding: '0 16px',
@@ -130,14 +130,14 @@ export default function Giris() {
                 transition: 'all 0.2s ease',
               }}
             >
-              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
           <p style={{ color: '#8b8ba0', fontSize: '13px', textAlign: 'center', marginTop: '24px' }}>
-            Hesabın yok mu?{' '}
-            <Link href="/kayit" style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: '500' }}>
-              Ücretsiz Kaydol
+            Don't have an account?{' '}
+            <Link href="/register" style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: '500' }}>
+              Sign up for free
             </Link>
           </p>
         </div>

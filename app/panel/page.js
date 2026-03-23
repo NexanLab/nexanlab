@@ -13,7 +13,7 @@ export default function Dashboard() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/giris')
+        router.push('/login')
         return
       }
       setUser(user)
@@ -33,7 +33,7 @@ export default function Dashboard() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: "'Segoe UI', system-ui, sans-serif",
       }}>
-        <p style={{ color: '#8b8ba0' }}>Yükleniyor...</p>
+        <p style={{ color: '#8b8ba0' }}>Loading...</p>
       </div>
     )
   }
@@ -69,8 +69,7 @@ export default function Dashboard() {
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {[
             { icon: '⊞', label: 'Dashboard', href: '/panel', active: true },
-            { icon: '🛠', label: 'Tools', href: '/panel/tools' },
-            { icon: '📊', label: 'Analytics', href: '/panel/analytics' },
+            { icon: '🛠', label: 'Tools', href: '/tools' },
             { icon: '⚙️', label: 'Settings', href: '/panel/settings' },
           ].map((item) => (
             <Link key={item.label} href={item.href} style={{
@@ -118,41 +117,24 @@ export default function Dashboard() {
             Welcome back 👋
           </h1>
           <p style={{ color: '#8b8ba0', fontSize: '15px' }}>
-            Here's what's happening with NexanLab today.
+            Here's an overview of your NexanLab tools.
           </p>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '40px' }}>
-          {[
-            { label: 'Total Tools', value: '500+', icon: '🛠', color: '#7c3aed' },
-            { label: 'Categories', value: '50+', icon: '📁', color: '#f59e0b' },
-            { label: 'Monthly Users', value: '10K+', icon: '👥', color: '#10b981' },
-          ].map((stat) => (
-            <div key={stat.label} style={{
-              background: '#13131a', border: '1px solid #2a2a3a',
-              borderRadius: '16px', padding: '24px',
-            }}>
-              <div style={{ fontSize: '28px', marginBottom: '12px' }}>{stat.icon}</div>
-              <div style={{ fontSize: '32px', fontWeight: '800', color: stat.color, marginBottom: '4px' }}>
-                {stat.value}
-              </div>
-              <div style={{ color: '#8b8ba0', fontSize: '13px' }}>{stat.label}</div>
-            </div>
-          ))}
         </div>
 
         {/* Quick Actions */}
         <div style={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '16px', padding: '24px' }}>
           <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>
-            Quick Actions
+            Your AI Tools
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
             {[
-              { label: 'Submit a Tool', desc: 'Add a new AI tool to the directory', icon: '➕', href: '/arac-ekle' },
-              { label: 'Browse Tools', desc: 'Explore all AI tools', icon: '🔍', href: '/araclar' },
-              { label: 'Cold Email Generator', desc: 'Generate AI-powered cold emails', icon: '✉️', href: '/tools/cold-email-generator' },
-              { label: 'Account Settings', desc: 'Manage your account', icon: '⚙️', href: '/panel/settings' },
+              { label: 'Cold Email Generator', desc: 'Generate personalized cold emails', icon: '✉️', href: '/tools/cold-email-generator' },
+              { label: 'SEO Title Generator', desc: 'Generate click-worthy SEO titles', icon: '🔍', href: '/tools/ai-seo-title-generator' },
+              { label: 'Ad Copy Generator', desc: 'Generate high-converting ad copy', icon: '📣', href: '/tools/ai-ad-copy-generator' },
+              { label: 'Product Description', desc: 'Generate compelling product descriptions', icon: '🛍️', href: '/tools/ai-product-description-generator' },
+              { label: 'Code Reviewer', desc: 'Get instant AI feedback on your code', icon: '💻', href: '/tools/ai-code-reviewer' },
+              { label: 'Image Prompt Generator', desc: 'Generate prompts for AI image tools', icon: '🎨', href: '/tools/ai-image-prompt-generator' },
+              { label: 'Regex Generator', desc: 'Generate regex patterns in plain English', icon: '⚡', href: '/tools/ai-regex-generator' },
             ].map((action) => (
               <Link key={action.label} href={action.href} style={{
                 display: 'flex', alignItems: 'center', gap: '14px',

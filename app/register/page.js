@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-export default function Kayit() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -13,7 +13,7 @@ export default function Kayit() {
   const [success, setSuccess] = useState(false)
   const router = useRouter()
 
-  async function kayitOl(e) {
+  async function handleRegister(e) {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -66,10 +66,10 @@ export default function Kayit() {
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
         }}>
           <h1 style={{ color: 'white', fontSize: '24px', fontWeight: '700', marginBottom: '8px', textAlign: 'center' }}>
-            Hesap Oluştur
+            Create an Account
           </h1>
           <p style={{ color: '#8b8ba0', fontSize: '14px', textAlign: 'center', marginBottom: '32px' }}>
-            Ücretsiz başla, hemen kullan
+            Free forever. No credit card required.
           </p>
 
           {success ? (
@@ -79,11 +79,11 @@ export default function Kayit() {
               textAlign: 'center',
             }}>
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>✅</div>
-              <p style={{ color: '#34d399', fontWeight: '600', marginBottom: '8px' }}>Kayıt başarılı!</p>
-              <p style={{ color: '#8b8ba0', fontSize: '13px' }}>Email adresine doğrulama linki gönderdik.</p>
+              <p style={{ color: '#34d399', fontWeight: '600', marginBottom: '8px' }}>Account created!</p>
+              <p style={{ color: '#8b8ba0', fontSize: '13px' }}>We sent a confirmation link to your email address.</p>
             </div>
           ) : (
-            <form onSubmit={kayitOl}>
+            <form onSubmit={handleRegister}>
               {error && (
                 <div style={{
                   padding: '12px 16px', borderRadius: '10px', marginBottom: '20px',
@@ -102,7 +102,7 @@ export default function Kayit() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@adresin.com"
+                  placeholder="you@example.com"
                   required
                   style={{
                     width: '100%', height: '44px', padding: '0 16px',
@@ -114,13 +114,13 @@ export default function Kayit() {
 
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
-                  Şifre
+                  Password
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="En az 6 karakter"
+                  placeholder="At least 6 characters"
                   required
                   style={{
                     width: '100%', height: '44px', padding: '0 16px',
@@ -142,15 +142,15 @@ export default function Kayit() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {loading ? 'Oluşturuluyor...' : 'Hesap Oluştur'}
+                {loading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}
 
           <p style={{ color: '#8b8ba0', fontSize: '13px', textAlign: 'center', marginTop: '24px' }}>
-            Zaten hesabın var mı?{' '}
-            <Link href="/giris" style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: '500' }}>
-              Giriş Yap
+            Already have an account?{' '}
+            <Link href="/login" style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: '500' }}>
+              Sign in
             </Link>
           </p>
         </div>
