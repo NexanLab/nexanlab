@@ -12,10 +12,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
+      if (!user) { router.push('/login'); return }
       setUser(user)
     }
     init()
@@ -38,15 +35,31 @@ export default function Dashboard() {
     )
   }
 
+  const tools = [
+    { label: 'Cold Email Generator', desc: 'Generate personalized cold emails', icon: '✉️', href: '/tools/cold-email-generator' },
+    { label: 'SEO Title Generator', desc: 'Generate click-worthy SEO titles', icon: '🔍', href: '/tools/ai-seo-title-generator' },
+    { label: 'Ad Copy Generator', desc: 'Generate high-converting ad copy', icon: '📣', href: '/tools/ai-ad-copy-generator' },
+    { label: 'Product Description', desc: 'Generate compelling product descriptions', icon: '🛍️', href: '/tools/ai-product-description-generator' },
+    { label: 'Code Reviewer', desc: 'Get instant AI feedback on your code', icon: '💻', href: '/tools/ai-code-reviewer' },
+    { label: 'Image Prompt Generator', desc: 'Generate prompts for AI image tools', icon: '🎨', href: '/tools/ai-image-prompt-generator' },
+    { label: 'Regex Generator', desc: 'Generate regex patterns in plain English', icon: '⚡', href: '/tools/ai-regex-generator' },
+  ]
+
   return (
-    <div style={{
-      minHeight: '100vh', background: '#0a0a0f',
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-    }}>
-      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        @media (max-width: 768px) {
+          .panel-sidebar { position: static !important; width: 100% !important; height: auto !important; border-right: none !important; border-bottom: 1px solid #2a2a3a !important; padding: 16px 20px !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; }
+          .panel-sidebar-nav { flex-direction: row !important; flex: 0 !important; gap: 4px !important; }
+          .panel-sidebar-user { display: none !important; }
+          .panel-main { margin-left: 0 !important; padding: 24px 16px !important; }
+          .panel-tools-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
       {/* Sidebar */}
-      <div style={{
+      <div className="panel-sidebar" style={{
         position: 'fixed', top: 0, left: 0, bottom: 0, width: '240px',
         background: '#0d0d14', borderRight: '1px solid #2a2a3a',
         display: 'flex', flexDirection: 'column', padding: '24px 16px',
@@ -66,11 +79,10 @@ export default function Dashboard() {
         </Link>
 
         {/* Nav */}
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <nav className="panel-sidebar-nav" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {[
             { icon: '⊞', label: 'Dashboard', href: '/panel', active: true },
             { icon: '🛠', label: 'Tools', href: '/tools' },
-            { icon: '⚙️', label: 'Settings', href: '/panel/settings' },
           ].map((item) => (
             <Link key={item.label} href={item.href} style={{
               display: 'flex', alignItems: 'center', gap: '10px',
@@ -79,16 +91,15 @@ export default function Dashboard() {
               background: item.active ? 'rgba(124,58,237,0.15)' : 'transparent',
               color: item.active ? '#a78bfa' : '#8b8ba0',
               border: item.active ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
-              transition: 'all 0.2s ease',
             }}>
               <span>{item.icon}</span>
-              {item.label}
+              <span style={{ display: 'inline' }}>{item.label}</span>
             </Link>
           ))}
         </nav>
 
         {/* User */}
-        <div style={{ borderTop: '1px solid #2a2a3a', paddingTop: '16px' }}>
+        <div className="panel-sidebar-user" style={{ borderTop: '1px solid #2a2a3a', paddingTop: '16px' }}>
           <div style={{ padding: '12px', borderRadius: '10px', background: '#13131a', marginBottom: '8px' }}>
             <p style={{ color: 'white', fontSize: '13px', fontWeight: '500', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user.email}
@@ -99,7 +110,7 @@ export default function Dashboard() {
             width: '100%', padding: '10px 12px',
             background: 'transparent', border: '1px solid #2a2a3a',
             borderRadius: '10px', color: '#8b8ba0', fontSize: '13px',
-            cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease',
+            cursor: 'pointer', textAlign: 'left',
           }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#f87171' }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a3a'; e.currentTarget.style.color = '#8b8ba0' }}
@@ -110,32 +121,33 @@ export default function Dashboard() {
       </div>
 
       {/* Main */}
-      <main style={{ marginLeft: '240px', padding: '40px' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>
-            Welcome back 👋
-          </h1>
-          <p style={{ color: '#8b8ba0', fontSize: '15px' }}>
-            Here's an overview of your NexanLab tools.
-          </p>
+      <main className="panel-main" style={{ marginLeft: '240px', padding: '40px' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>
+              Welcome back 👋
+            </h1>
+            <p style={{ color: '#8b8ba0', fontSize: '15px' }}>
+              Here's an overview of your NexanLab tools.
+            </p>
+          </div>
+          {/* Mobile sign out */}
+          <button onClick={signOut} style={{
+            display: 'none',
+            padding: '8px 16px', background: 'transparent',
+            border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: '10px', color: '#f87171', fontSize: '13px', cursor: 'pointer',
+          }} className="panel-mobile-signout">
+            🚪 Sign Out
+          </button>
         </div>
 
-        {/* Quick Actions */}
         <div style={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '16px', padding: '24px' }}>
           <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>
             Your AI Tools
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            {[
-              { label: 'Cold Email Generator', desc: 'Generate personalized cold emails', icon: '✉️', href: '/tools/cold-email-generator' },
-              { label: 'SEO Title Generator', desc: 'Generate click-worthy SEO titles', icon: '🔍', href: '/tools/ai-seo-title-generator' },
-              { label: 'Ad Copy Generator', desc: 'Generate high-converting ad copy', icon: '📣', href: '/tools/ai-ad-copy-generator' },
-              { label: 'Product Description', desc: 'Generate compelling product descriptions', icon: '🛍️', href: '/tools/ai-product-description-generator' },
-              { label: 'Code Reviewer', desc: 'Get instant AI feedback on your code', icon: '💻', href: '/tools/ai-code-reviewer' },
-              { label: 'Image Prompt Generator', desc: 'Generate prompts for AI image tools', icon: '🎨', href: '/tools/ai-image-prompt-generator' },
-              { label: 'Regex Generator', desc: 'Generate regex patterns in plain English', icon: '⚡', href: '/tools/ai-regex-generator' },
-            ].map((action) => (
+          <div className="panel-tools-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            {tools.map((action) => (
               <Link key={action.label} href={action.href} style={{
                 display: 'flex', alignItems: 'center', gap: '14px',
                 padding: '16px', borderRadius: '12px',
@@ -153,11 +165,11 @@ export default function Dashboard() {
                 }}>
                   {action.icon}
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ color: 'white', fontSize: '14px', fontWeight: '600', marginBottom: '2px' }}>
                     {action.label}
                   </div>
-                  <div style={{ color: '#8b8ba0', fontSize: '12px' }}>{action.desc}</div>
+                  <div style={{ color: '#8b8ba0', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{action.desc}</div>
                 </div>
               </Link>
             ))}

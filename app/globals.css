@@ -24,3 +24,148 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE — NexanLab
+   Breakpoint: 768px
+   ============================================ */
+
+@media (max-width: 768px) {
+
+  /* ---------- ANA SAYFA HEADER ---------- */
+  .home-nav { display: none !important; }
+  .home-header-cta { display: none !important; }
+
+  /* ---------- HERO ---------- */
+  .hero-search-form {
+    flex-direction: column !important;
+  }
+  .hero-stats {
+    gap: 24px !important;
+  }
+
+  /* ---------- TOOL GRID (2 veya 3 kolon → 1 kolon) ---------- */
+  .tool-grid-3,
+  .tool-grid-2,
+  .tool-grid-auto {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---------- TOOL SAYFASI: form + result yan yana → alt alta ---------- */
+  .tool-page-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Sticky form mobilede sticky olmayacak */
+  .tool-form-sticky {
+    position: static !important;
+  }
+
+  /* ---------- ABOUT: stats 4 kolon → 2 kolon ---------- */
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  /* about values 2 kolon → 1 kolon */
+  .about-values {
+    grid-template-columns: 1fr !important;
+  }
+  /* about CTA butonlar → alt alta */
+  .about-cta-btns {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .about-cta-btns a {
+    text-align: center !important;
+  }
+
+  /* ---------- CONTACT: 3 kart → 1 kolon ---------- */
+  .contact-cards {
+    grid-template-columns: 1fr !important;
+  }
+  /* contact form 2 kolon → 1 kolon */
+  .contact-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---------- WHY SECTION ---------- */
+  .why-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+
+  /* ---------- NEWSLETTER ---------- */
+  .newsletter-form {
+    flex-direction: column !important;
+  }
+  .newsletter-form input,
+  .newsletter-form button {
+    width: 100% !important;
+  }
+
+  /* ---------- FOOTER ---------- */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+
+  /* ---------- PANEL (sidebar → top bar) ---------- */
+  .panel-sidebar {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid #2a2a3a !important;
+    padding: 16px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .panel-sidebar-nav {
+    flex-direction: row !important;
+    flex: 0 !important;
+  }
+  .panel-sidebar-user {
+    display: none !important;
+  }
+  .panel-main {
+    margin-left: 0 !important;
+    padding: 24px 16px !important;
+  }
+  .panel-tools-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---------- SEO TITLE: 2 kolon form → 1 kolon ---------- */
+  .seo-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .seo-form-grid > [style*="gridColumn"] {
+    grid-column: 1 !important;
+  }
+
+  /* ---------- CODE REVIEWER: score card → dikey ---------- */
+  .score-card {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+
+  /* ---------- GENEL PADDING DÜZELTME ---------- */
+  .mobile-padding {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Çok küçük ekranlar için ek düzeltmeler */
+  .about-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .hero-stats {
+    gap: 16px !important;
+  }
+}

@@ -173,10 +173,10 @@ export default function ImagePromptGenerator() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '24px', alignItems: 'start' }}>
+        <div className="tool-page-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '24px', alignItems: 'start' }}>
 
           {/* Form */}
-          <div style={{
+          <div className="tool-form-sticky" style={{
             background: '#13131a', border: '1px solid #2a2a3a',
             borderRadius: '20px', padding: '32px',
             position: 'sticky', top: '84px',

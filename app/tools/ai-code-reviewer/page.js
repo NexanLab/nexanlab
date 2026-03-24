@@ -160,7 +160,7 @@ export default function CodeReviewer() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', alignItems: 'start' }}>
 
           {/* Form */}
-          <div style={{
+          <div className="tool-form-sticky" style={{
             background: '#13131a', border: '1px solid #2a2a3a',
             borderRadius: '20px', padding: '32px',
             position: 'sticky', top: '84px',
@@ -277,7 +277,7 @@ export default function CodeReviewer() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                 {/* Score Card */}
-                <div style={{
+                <div className="score-card" style={{
                   background: '#13131a', border: '1px solid #2a2a3a',
                   borderRadius: '20px', padding: '28px',
                   display: 'flex', alignItems: 'center', gap: '24px',

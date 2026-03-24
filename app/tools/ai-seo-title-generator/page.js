@@ -121,7 +121,7 @@ export default function SeoTitleGenerator() {
           background: '#13131a', border: '1px solid #2a2a3a',
           borderRadius: '20px', padding: '32px', marginBottom: '24px',
         }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="seo-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             {/* Keyword */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>

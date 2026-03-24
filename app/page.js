@@ -35,17 +35,10 @@ function StarRating({ rating }) {
 }
 
 const colorMap = {
-  amber: '#f59e0b',
-  violet: '#7c3aed',
-  blue: '#3b82f6',
-  green: '#10b981',
-  pink: '#ec4899',
-  red: '#ef4444',
+  amber: '#f59e0b', violet: '#7c3aed', blue: '#3b82f6',
+  green: '#10b981', pink: '#ec4899', red: '#ef4444',
 }
-
-function resolveColor(raw) {
-  return colorMap[raw] || raw || '#7c3aed'
-}
+function resolveColor(raw) { return colorMap[raw] || raw || '#7c3aed' }
 
 function ToolCard({ tool }) {
   const [hovered, setHovered] = useState(false)
@@ -58,11 +51,10 @@ function ToolCard({ tool }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        position: 'relative',
-        background: '#13131a',
+        position: 'relative', background: '#13131a',
         border: `1px solid ${hovered ? accentColor + '50' : '#2a2a3a'}`,
-        borderRadius: '16px', padding: '24px',
-        cursor: 'pointer', transition: 'all 0.2s ease',
+        borderRadius: '16px', padding: '24px', cursor: 'pointer',
+        transition: 'all 0.2s ease',
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: hovered ? `0 20px 40px ${accentColor}20` : 'none',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
@@ -74,12 +66,11 @@ function ToolCard({ tool }) {
         background: `linear-gradient(90deg, transparent, ${accentColor}60, transparent)`,
         opacity: hovered ? 1 : 0, transition: 'opacity 0.3s ease',
       }} />
-
       <div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '40px', height: '40px', borderRadius: '10px',
+              width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '16px', fontWeight: '700', color: 'white',
               background: `${accentColor}25`, border: `1px solid ${accentColor}40`,
@@ -97,16 +88,13 @@ function ToolCard({ tool }) {
               borderRadius: '999px', whiteSpace: 'nowrap',
               border: `1px solid ${badgeColor}40`,
               background: `${badgeColor}15`, color: badgeColor,
-            }}>
-              {tool.badge}
-            </span>
+            }}>{tool.badge}</span>
           )}
         </div>
         <p style={{ color: '#8b8ba0', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
           {tool.description}
         </p>
       </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <StarRating rating={tool.rating} />
@@ -136,7 +124,7 @@ function ToolCard({ tool }) {
 
 function Header() {
   const [scrolled, setScrolled] = useState(false)
-  const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -154,6 +142,7 @@ function Header() {
     }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px' }}>
+          {/* Logo */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <div style={{
               width: '36px', height: '36px', borderRadius: '10px',
@@ -167,7 +156,8 @@ function Header() {
             </span>
           </Link>
 
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Desktop Nav */}
+          <nav className="home-nav" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {[
               { label: 'Tools', href: '/tools' },
               { label: 'Categories', href: '/categories' },
@@ -187,14 +177,66 @@ function Header() {
             ))}
           </nav>
 
-          <Link href="/tools" style={{
+          {/* Desktop CTA */}
+          <Link href="/tools" className="home-header-cta" style={{
             padding: '8px 20px', background: '#7c3aed', color: 'white',
             borderRadius: '10px', fontSize: '14px', fontWeight: '600',
             textDecoration: 'none', boxShadow: '0 0 20px rgba(124,58,237,0.4)',
           }}>
             Explore Tools
           </Link>
+
+          {/* Mobile Hamburger */}
+          <button
+            className="home-mobile-menu-btn"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              display: 'none', // CSS'de override edilecek
+              background: 'transparent', border: '1px solid #2a2a3a',
+              borderRadius: '8px', padding: '8px 12px',
+              color: 'white', fontSize: '18px', cursor: 'pointer',
+            }}
+          >
+            {menuOpen ? '✕' : '☰'}
+          </button>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {menuOpen && (
+          <div style={{
+            borderTop: '1px solid #2a2a3a',
+            padding: '16px 0',
+            display: 'flex', flexDirection: 'column', gap: '4px',
+          }}>
+            {[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Categories', href: '/categories' },
+              { label: 'Blog', href: '/blog' },
+              { label: 'About', href: '/about' },
+            ].map((item) => (
+              <Link key={item.href} href={item.href}
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  padding: '12px 16px', fontSize: '15px', fontWeight: '500',
+                  color: '#e2e8f0', textDecoration: 'none', borderRadius: '8px',
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/tools"
+              onClick={() => setMenuOpen(false)}
+              style={{
+                margin: '8px 16px 0 16px', padding: '12px 20px',
+                background: '#7c3aed', color: 'white',
+                borderRadius: '10px', fontSize: '14px', fontWeight: '600',
+                textDecoration: 'none', textAlign: 'center',
+              }}
+            >
+              Explore Tools
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   )
@@ -205,9 +247,7 @@ function HeroSection({ featuredTools }) {
   const [visible, setVisible] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    setTimeout(() => setVisible(true), 100)
-  }, [])
+  useEffect(() => { setTimeout(() => setVisible(true), 100) }, [])
 
   function handleSearch(e) {
     e.preventDefault()
@@ -225,6 +265,7 @@ function HeroSection({ featuredTools }) {
       alignItems: 'center', justifyContent: 'center',
       padding: '80px 24px', overflow: 'hidden',
     }}>
+      {/* BG orbs */}
       <div style={{
         position: 'absolute', top: '-160px', right: '-160px',
         width: '600px', height: '600px', borderRadius: '50%',
@@ -243,7 +284,7 @@ function HeroSection({ featuredTools }) {
         backgroundSize: '60px 60px',
       }} />
 
-      <div style={{ position: 'relative', zIndex: 10, maxWidth: '900px', textAlign: 'center' }}>
+      <div style={{ position: 'relative', zIndex: 10, maxWidth: '900px', textAlign: 'center', width: '100%' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '8px',
           padding: '6px 16px', borderRadius: '999px',
@@ -259,7 +300,7 @@ function HeroSection({ featuredTools }) {
           {['Discover the', 'Best AI Tools', 'in One Place'].map((word, i) => (
             <div key={word} style={{
               display: 'block',
-              fontSize: 'clamp(48px, 8vw, 80px)',
+              fontSize: 'clamp(36px, 8vw, 80px)',
               fontWeight: '900', lineHeight: '1.1', letterSpacing: '-2px',
               color: i === 1 ? '#7c3aed' : 'white',
               opacity: visible ? 1 : 0,
@@ -272,7 +313,7 @@ function HeroSection({ featuredTools }) {
         </div>
 
         <p style={{
-          color: '#8b8ba0', fontSize: '18px', lineHeight: '1.7',
+          color: '#8b8ba0', fontSize: 'clamp(15px, 2vw, 18px)', lineHeight: '1.7',
           maxWidth: '600px', margin: '0 auto 40px auto',
           opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)',
           transition: 'all 0.5s ease 0.5s',
@@ -280,7 +321,7 @@ function HeroSection({ featuredTools }) {
           Find the AI tools that will supercharge your workflow, boost creativity, and maximize productivity.
         </p>
 
-        <form onSubmit={handleSearch} style={{
+        <form onSubmit={handleSearch} className="hero-search-form" style={{
           display: 'flex', gap: '12px', maxWidth: '520px', margin: '0 auto 48px auto',
           opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(20px)',
           transition: 'all 0.5s ease 0.65s',
@@ -309,7 +350,7 @@ function HeroSection({ featuredTools }) {
           </button>
         </form>
 
-        <div style={{
+        <div className="hero-stats" style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '48px',
           opacity: visible ? 1 : 0, transition: 'all 0.5s ease 0.8s',
         }}>
@@ -319,7 +360,7 @@ function HeroSection({ featuredTools }) {
             { value: '10K+', label: 'Users' },
           ].map(({ value, label }) => (
             <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: '800', color: 'white' }}>{value}</div>
+              <div style={{ fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: '800', color: 'white' }}>{value}</div>
               <div style={{ fontSize: '12px', color: '#8b8ba0' }}>{label}</div>
             </div>
           ))}
@@ -355,16 +396,16 @@ function FeaturedToolsSection({ tools }) {
               Featured
             </span>
           </div>
-          <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: '800', color: 'white', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(20px, 4vw, 36px)', fontWeight: '800', color: 'white', margin: 0 }}>
             Top Rated This Week
           </h2>
         </div>
-        <Link href="/tools" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>
+        <Link href="/tools" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
           View All →
         </Link>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div className="tool-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
         {tools.map((tool) => (
           <ToolCard key={tool.id} tool={tool} />
         ))}
@@ -375,7 +416,6 @@ function FeaturedToolsSection({ tools }) {
 
 function NewToolsSection({ tools }) {
   if (!tools.length) return null
-
   return (
     <section style={{ padding: '0 24px 80px 24px', maxWidth: '1280px', margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px' }}>
@@ -386,16 +426,15 @@ function NewToolsSection({ tools }) {
               New
             </span>
           </div>
-          <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: '800', color: 'white', margin: 0 }}>
+          <h2 style={{ fontSize: 'clamp(20px, 4vw, 36px)', fontWeight: '800', color: 'white', margin: 0 }}>
             Recently Added
           </h2>
         </div>
-        <Link href="/tools?filter=new" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>
+        <Link href="/tools?filter=new" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
           View All →
         </Link>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div className="tool-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
         {tools.map((tool) => (
           <ToolCard key={tool.id} tool={tool} />
         ))}
@@ -413,7 +452,7 @@ function WhySection() {
         background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)',
         opacity: 0.05, pointerEvents: 'none',
       }} />
-      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
+      <div className="why-grid" style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '80px', alignItems: 'center' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <div style={{ width: '4px', height: '20px', borderRadius: '999px', background: '#f59e0b' }} />
@@ -421,7 +460,7 @@ function WhySection() {
               Why NexanLab?
             </span>
           </div>
-          <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: '800', color: 'white', marginBottom: '24px', lineHeight: '1.2' }}>
+          <h2 style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: '800', color: 'white', marginBottom: '24px', lineHeight: '1.2' }}>
             Finding AI Tools<br />
             <span style={{ color: '#7c3aed' }}>Just Got Easier</span>
           </h2>
@@ -477,19 +516,8 @@ function NewsletterSection() {
         position: 'relative', borderRadius: '24px',
         border: '1px solid rgba(124,58,237,0.3)',
         background: 'linear-gradient(135deg, rgba(124,58,237,0.1), #13131a, rgba(245,158,11,0.05))',
-        padding: '80px 40px', textAlign: 'center', overflow: 'hidden',
+        padding: '60px 24px', textAlign: 'center', overflow: 'hidden',
       }}>
-        <div style={{
-          position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '400px', height: '1px',
-          background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.6), transparent)',
-        }} />
-        <div style={{
-          position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
-          width: '300px', height: '300px', borderRadius: '50%',
-          background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)',
-          opacity: 0.1, pointerEvents: 'none',
-        }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
@@ -499,7 +527,7 @@ function NewsletterSection() {
           }}>
             ✦ Weekly AI Newsletter
           </div>
-          <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: '800', color: 'white', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: '800', color: 'white', marginBottom: '16px' }}>
             Be the First to Know
           </h2>
           <p style={{ color: '#8b8ba0', maxWidth: '480px', margin: '0 auto 32px auto', lineHeight: '1.7' }}>
@@ -515,7 +543,7 @@ function NewsletterSection() {
               ✦ You're in! Welcome aboard.
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '12px', maxWidth: '420px', margin: '0 auto' }}>
+            <div className="newsletter-form" style={{ display: 'flex', gap: '12px', maxWidth: '420px', margin: '0 auto' }}>
               <input
                 type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -524,6 +552,7 @@ function NewsletterSection() {
                   flex: 1, height: '48px', padding: '0 16px',
                   background: '#0a0a0f', border: '1px solid #2a2a3a',
                   borderRadius: '12px', color: 'white', fontSize: '14px', outline: 'none',
+                  minWidth: 0,
                 }}
               />
               <button onClick={() => email && setSubmitted(true)} style={{
@@ -543,8 +572,6 @@ function NewsletterSection() {
     </section>
   )
 }
-
-// app/page.js içindeki Footer fonksiyonunu bu kodla değiştir
 
 function Footer() {
   const footerLinks = {
@@ -576,7 +603,7 @@ function Footer() {
         background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.4), transparent)',
       }} />
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '64px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', marginBottom: '48px' }}>
+        <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '48px', marginBottom: '48px' }}>
           <div>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', marginBottom: '16px' }}>
               <div style={{
@@ -611,7 +638,7 @@ function Footer() {
             </div>
           ))}
         </div>
-        <div style={{ paddingTop: '24px', borderTop: '1px solid #2a2a3a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="footer-bottom" style={{ paddingTop: '24px', borderTop: '1px solid #2a2a3a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p style={{ color: '#8b8ba0', fontSize: '12px' }}>
             © {new Date().getFullYear()} NexanLab. All rights reserved.
           </p>
@@ -642,18 +669,10 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchTools() {
       const { data: featured } = await supabase
-        .from('tools')
-        .select('*')
-        .eq('is_featured', true)
-        .order('rating', { ascending: false })
-        .limit(6)
-
+        .from('tools').select('*').eq('is_featured', true)
+        .order('rating', { ascending: false }).limit(6)
       const { data: newest } = await supabase
-        .from('tools')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(3)
-
+        .from('tools').select('*').order('created_at', { ascending: false }).limit(3)
       if (featured) setFeaturedTools(featured)
       if (newest) setNewTools(newest)
       setLoading(false)
@@ -666,10 +685,12 @@ export default function HomePage() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @keyframes scrollBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a0a0f; }
         ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
         input::placeholder { color: #8b8ba0; }
+        @media (max-width: 768px) {
+          .home-mobile-menu-btn { display: block !important; }
+        }
       `}</style>
       <Header />
       <HeroSection featuredTools={featuredTools} />
