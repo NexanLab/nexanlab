@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+import Header from '@/app/components/Header'
 
 export default function AboutPage() {
   const stats = [
-    { value: '10+', label: 'AI Tools' },
+    { value: '7', label: 'AI Tools' },
     { value: '8+', label: 'Categories' },
-    { value: '2', label: 'AI-Powered Tools' },
+    { value: '7', label: 'AI-Powered Tools' },
     { value: '100%', label: 'Free to Use' },
   ]
 
@@ -24,12 +25,12 @@ export default function AboutPage() {
     {
       icon: '🔄',
       title: 'Constantly Updated',
-      description: 'The AI landscape evolves daily. We keep up so you don\'t have to.',
+      description: "The AI landscape evolves daily. We keep up so you don't have to.",
     },
     {
       icon: '🛠',
       title: 'Built for Doers',
-      description: 'We build our own AI-powered tools to help you work smarter — not just list other people\'s tools.',
+      description: "We build our own AI-powered tools to help you work smarter — not just list other people's tools.",
     },
   ]
 
@@ -37,26 +38,7 @@ export default function AboutPage() {
     <div style={{ minHeight: '100vh', background: '#0a0a0f', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
 
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        background: 'rgba(10,10,15,0.9)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #2a2a3a', padding: '0 24px',
-      }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '14px', fontWeight: '800', color: 'white',
-            }}>N</div>
-            <span style={{ fontSize: '18px', fontWeight: '700', color: 'white' }}>
-              Nexan<span style={{ color: '#7c3aed' }}>Lab</span>
-            </span>
-          </Link>
-          <Link href="/" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>← Back to Home</Link>
-        </div>
-      </header>
+      <Header />
 
       <main style={{ maxWidth: '900px', margin: '0 auto', padding: '80px 24px' }}>
 
@@ -71,11 +53,11 @@ export default function AboutPage() {
             ✦ About NexanLab
           </div>
           <h1 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: '900', color: 'white', marginBottom: '24px', letterSpacing: '-1px' }}>
-            We Help You Find the<br />
-            <span style={{ color: '#7c3aed' }}>Right AI Tools</span>
+            We Help You Work Smarter<br />
+            <span style={{ color: '#7c3aed' }}>With AI Tools</span>
           </h1>
           <p style={{ color: '#8b8ba0', fontSize: '18px', lineHeight: '1.7', maxWidth: '600px', margin: '0 auto' }}>
-            NexanLab is a curated directory of the best AI tools — plus our own AI-powered tools to help you work faster and smarter.
+            NexanLab is a suite of free AI-powered tools built to help you write better, move faster, and work smarter.
           </p>
         </div>
 
@@ -107,7 +89,7 @@ export default function AboutPage() {
             </span>
           </div>
           <p style={{ color: '#e2e8f0', fontSize: '17px', lineHeight: '1.8' }}>
-            The AI tools space is overwhelming. New tools launch every day, and it's impossible to keep up. NexanLab exists to cut through the noise — we test, curate and organize the best AI tools so you can find what you need quickly and get back to work.
+            We believe great AI tools should be accessible to everyone. NexanLab builds free, no-nonsense tools that help writers, marketers, developers, and creators get real work done — without the bloat.
           </p>
         </div>
 
@@ -148,10 +130,10 @@ export default function AboutPage() {
           borderRadius: '20px', padding: '48px', textAlign: 'center',
         }}>
           <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '800', marginBottom: '16px' }}>
-            Ready to Find Your Tools?
+            Ready to Get Started?
           </h2>
           <p style={{ color: '#8b8ba0', marginBottom: '32px', fontSize: '16px' }}>
-            Browse our curated directory or try one of our AI-powered tools.
+            Try one of our free AI-powered tools right now.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
             <Link href="/tools" style={{

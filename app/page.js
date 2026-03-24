@@ -544,6 +544,8 @@ function NewsletterSection() {
   )
 }
 
+// app/page.js içindeki Footer fonksiyonunu bu kodla değiştir
+
 function Footer() {
   const footerLinks = {
     Tools: [
@@ -588,23 +590,8 @@ function Footer() {
               </span>
             </Link>
             <p style={{ color: '#8b8ba0', fontSize: '13px', lineHeight: '1.7', maxWidth: '260px', marginBottom: '24px' }}>
-              Discover, compare and use the best AI tools. Updated daily with curated selections.
+              Free AI-powered tools to help you write, build, and create faster.
             </p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['𝕏', '⌨', 'in', '✉'].map((icon, i) => (
-                <a key={i} href="#" style={{
-                  width: '36px', height: '36px', borderRadius: '8px',
-                  background: '#1e1e2a', border: '1px solid #2a2a3a',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#8b8ba0', textDecoration: 'none', fontSize: '14px',
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.5)'; e.currentTarget.style.color = 'white' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a3a'; e.currentTarget.style.color = '#8b8ba0' }}
-                >
-                  {icon}
-                </a>
-              ))}
-            </div>
           </div>
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
@@ -629,13 +616,16 @@ function Footer() {
             © {new Date().getFullYear()} NexanLab. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: '16px' }}>
-            {['Privacy Policy', 'Terms of Service'].map((text) => (
-              <a key={text} href="#" style={{ color: '#8b8ba0', fontSize: '12px', textDecoration: 'none' }}
+            {[
+              { label: 'Privacy Policy', href: '/privacy' },
+              { label: 'Terms of Service', href: '/terms' },
+            ].map(({ label, href }) => (
+              <Link key={label} href={href} style={{ color: '#8b8ba0', fontSize: '12px', textDecoration: 'none' }}
                 onMouseEnter={(e) => e.target.style.color = 'white'}
                 onMouseLeave={(e) => e.target.style.color = '#8b8ba0'}
               >
-                {text}
-              </a>
+                {label}
+              </Link>
             ))}
           </div>
         </div>
