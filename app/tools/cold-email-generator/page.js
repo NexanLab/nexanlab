@@ -1,66 +1,63 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import Header from '../../components/Header'
 
-const categories = [
-  'All',
-  'Chatbots',
-  'Writing & Content',
-  'Image & Design',
-  'Video',
-  'Code',
-  'Productivity',
-  'Audio & Music',
-]
+export default function ColdEmailGenerator() {
+  const [form, setForm] = useState({
+    senderName: '',
+    senderRole: '',
+    recipientName: '',
+    recipientCompany: '',
+    purpose: '',
+    tone: 'professional',
+  })
+  const [result, setResult] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
-export default function ToolsPage() {
-  const [tools, setTools] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // Pick up ?search= or ?category= from URL
-    const q = searchParams.get('search') || ''
-    const cat = searchParams.get('category') || 'All'
-    setSearch(q)
-    setActiveCategory(cat)
-    fetchTools()
-  }, [])
-
-  useEffect(() => {
-    let result = tools
-
-    if (activeCategory !== 'All') {
-      result = result.filter(t => t.category === activeCategory)
+  async function generateEmail() {
+    if (!form.senderName || !form.recipientCompany || !form.purpose) {
+      setError('Please fill in the required fields.')
+      return
     }
 
-    if (search.trim()) {
-      result = result.filter(t =>
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.description.toLowerCase().includes(search.toLowerCase())
-      )
+    setLoading(true)
+    setError('')
+    setResult('')
+
+    try {
+      const response = await fetch('/api/generate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        setError(data.error)
+      } else {
+        setResult(data.email)
+      }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
     }
 
-    setFiltered(result)
-  }, [activeCategory, search, tools])
-
-  async function fetchTools() {
-    const { data } = await supabase
-      .from('tools')
-      .select('*')
-      .order('rating', { ascending: false })
-    if (data) {
-      setTools(data)
-      setFiltered(data)
-    }
     setLoading(false)
+  }
+
+  async function copyToClipboard() {
+    await navigator.clipboard.writeText(result)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function resetForm() {
+    setForm({ senderName: '', senderRole: '', recipientName: '', recipientCompany: '', purpose: '', tone: 'professional' })
+    setResult('')
+    setError('')
   }
 
   return (
@@ -70,15 +67,39 @@ export default function ToolsPage() {
     }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        input::placeholder { color: #8b8ba0; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a0f; }
-        ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+        input::placeholder, textarea::placeholder { color: #8b8ba0; }
+        select option { background: #13131a; color: white; }
+        @media (max-width: 768px) {
+          .tool-page-grid { grid-template-columns: 1fr !important; }
+          .tool-form-sticky { position: static !important; }
+        }
       `}</style>
 
-      <Header />
+      {/* Header */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        background: 'rgba(10,10,15,0.9)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid #2a2a3a', padding: '0 24px',
+      }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '8px',
+              background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '14px', fontWeight: '800', color: 'white',
+            }}>N</div>
+            <span style={{ fontSize: '18px', fontWeight: '700', color: 'white' }}>
+              Nexan<span style={{ color: '#7c3aed' }}>Lab</span>
+            </span>
+          </Link>
+          <Link href="/tools" style={{ color: '#8b8ba0', fontSize: '14px', textDecoration: 'none' }}>
+            ← Back to Tools
+          </Link>
+        </div>
+      </header>
 
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px' }}>
+      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 24px' }}>
 
         {/* Page Header */}
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
@@ -88,179 +109,247 @@ export default function ToolsPage() {
             border: '1px solid rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.1)',
             color: '#a78bfa', fontSize: '12px', fontWeight: '600', marginBottom: '24px',
           }}>
-            ✦ {tools.length} AI Tools
+            ✦ AI-Powered Tool
           </div>
-          <h1 style={{ fontSize: 'clamp(36px, 6vw, 60px)', fontWeight: '900', color: 'white', marginBottom: '16px', letterSpacing: '-1px' }}>
-            AI Tools
+          <h1 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: '900', color: 'white', marginBottom: '16px', letterSpacing: '-1px' }}>
+            AI Cold Email Generator
           </h1>
           <p style={{ color: '#8b8ba0', fontSize: '18px', maxWidth: '500px', margin: '0 auto' }}>
-            Free AI-powered tools to supercharge your workflow.
+            Generate personalized, high-converting cold emails in seconds using AI.
           </p>
         </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative', maxWidth: '560px', margin: '0 auto 40px auto' }}>
-          <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '16px', color: '#8b8ba0' }}>🔍</span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tools..."
-            style={{
-              width: '100%', height: '52px', paddingLeft: '46px', paddingRight: '16px',
-              background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '14px',
-              color: 'white', fontSize: '15px', outline: 'none',
-            }}
-          />
-        </div>
+        <div className="tool-page-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 
-        {/* Categories */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '48px' }}>
-          {categories.map((cat) => (
+          {/* Form */}
+          <div className="tool-form-sticky" style={{
+            background: '#13131a', border: '1px solid #2a2a3a',
+            borderRadius: '20px', padding: '32px',
+            position: 'sticky', top: '84px', alignSelf: 'start',
+          }}>
+            <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700', marginBottom: '24px' }}>
+              📝 Email Details
+            </h2>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Your Name <span style={{ color: '#7c3aed' }}>*</span>
+              </label>
+              <input
+                type="text"
+                value={form.senderName}
+                onChange={(e) => setForm({ ...form, senderName: e.target.value })}
+                placeholder="John Doe"
+                style={{
+                  width: '100%', height: '44px', padding: '0 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Your Role / Company
+              </label>
+              <input
+                type="text"
+                value={form.senderRole}
+                onChange={(e) => setForm({ ...form, senderRole: e.target.value })}
+                placeholder="CEO at Acme Inc."
+                style={{
+                  width: '100%', height: '44px', padding: '0 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Recipient Name
+              </label>
+              <input
+                type="text"
+                value={form.recipientName}
+                onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
+                placeholder="Jane Smith"
+                style={{
+                  width: '100%', height: '44px', padding: '0 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Recipient's Company <span style={{ color: '#7c3aed' }}>*</span>
+              </label>
+              <input
+                type="text"
+                value={form.recipientCompany}
+                onChange={(e) => setForm({ ...form, recipientCompany: e.target.value })}
+                placeholder="Google, Microsoft..."
+                style={{
+                  width: '100%', height: '44px', padding: '0 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Email Purpose <span style={{ color: '#7c3aed' }}>*</span>
+              </label>
+              <textarea
+                value={form.purpose}
+                onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+                placeholder="e.g. I want to offer my web development services and get a meeting..."
+                rows={3}
+                style={{
+                  width: '100%', padding: '12px 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px',
+                  outline: 'none', resize: 'vertical', lineHeight: '1.5',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
+                Tone
+              </label>
+              <select
+                value={form.tone}
+                onChange={(e) => setForm({ ...form, tone: e.target.value })}
+                style={{
+                  width: '100%', height: '44px', padding: '0 14px',
+                  background: '#0a0a0f', border: '1px solid #2a2a3a',
+                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
+                }}
+              >
+                <option value="professional">Professional</option>
+                <option value="friendly">Friendly</option>
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+                <option value="confident">Confident</option>
+              </select>
+            </div>
+
+            {error && (
+              <div style={{
+                padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                color: '#f87171', fontSize: '13px',
+              }}>
+                {error}
+              </div>
+            )}
+
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={generateEmail}
+              disabled={loading}
               style={{
-                padding: '8px 18px', borderRadius: '999px',
-                fontSize: '13px', fontWeight: '500', cursor: 'pointer',
+                width: '100%', height: '48px',
+                background: loading ? '#4c1d95' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                color: 'white', border: 'none', borderRadius: '12px',
+                fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow: loading ? 'none' : '0 0 24px rgba(124,58,237,0.4)',
                 transition: 'all 0.2s ease',
-                border: activeCategory === cat ? '1px solid #7c3aed' : '1px solid #2a2a3a',
-                background: activeCategory === cat ? '#7c3aed' : '#13131a',
-                color: activeCategory === cat ? 'white' : '#8b8ba0',
-                boxShadow: activeCategory === cat ? '0 0 15px rgba(124,58,237,0.4)' : 'none',
               }}
             >
-              {cat}
+              {loading ? '✦ Generating...' : '✦ Generate Email'}
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Results count */}
-        <div style={{ color: '#8b8ba0', fontSize: '14px', marginBottom: '24px' }}>
-          {filtered.length} tools found
-          {activeCategory !== 'All' && <span style={{ color: '#a78bfa', marginLeft: '8px' }}>in {activeCategory}</span>}
-        </div>
+          {/* Result */}
+          <div style={{
+            background: '#13131a', border: '1px solid #2a2a3a',
+            borderRadius: '20px', padding: '32px',
+            display: 'flex', flexDirection: 'column', minHeight: '400px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>
+                ✉️ Generated Email
+              </h2>
+              {result && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={copyToClipboard}
+                    style={{
+                      padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
+                      cursor: 'pointer', transition: 'all 0.2s ease',
+                      background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)',
+                      border: copied ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(124,58,237,0.3)',
+                      color: copied ? '#34d399' : '#a78bfa',
+                    }}
+                  >
+                    {copied ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                  <button
+                    onClick={resetForm}
+                    style={{
+                      padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
+                      cursor: 'pointer', background: 'transparent',
+                      border: '1px solid #2a2a3a', color: '#8b8ba0',
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
 
-        {/* Tools Grid */}
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '80px', color: '#8b8ba0' }}>
-            Loading tools...
+            {loading ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '48px', height: '48px', borderRadius: '50%',
+                  border: '3px solid #2a2a3a', borderTop: '3px solid #7c3aed',
+                  animation: 'spin 1s linear infinite',
+                }} />
+                <p style={{ color: '#8b8ba0', fontSize: '14px' }}>AI is writing your email...</p>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              </div>
+            ) : result ? (
+              <div style={{
+                flex: 1, background: '#0a0a0f', borderRadius: '12px',
+                padding: '20px', border: '1px solid #2a2a3a', overflowY: 'auto',
+              }}>
+                <pre style={{
+                  color: '#e2e8f0', fontSize: '14px', lineHeight: '1.7',
+                  whiteSpace: 'pre-wrap', fontFamily: "'Segoe UI', system-ui, sans-serif",
+                }}>
+                  {result}
+                </pre>
+              </div>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '72px', height: '72px', borderRadius: '20px',
+                  background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px',
+                }}>
+                  ✉️
+                </div>
+                <p style={{ color: '#8b8ba0', fontSize: '15px', textAlign: 'center' }}>
+                  Fill in the details and click<br />
+                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>Generate Email</span> to get started.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                  {['Personalized opening', 'Clear value proposition', 'Strong call to action'].map((feature) => (
+                    <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: '#7c3aed', fontSize: '14px' }}>✓</span>
+                      <span style={{ color: '#8b8ba0', fontSize: '13px' }}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-            <p style={{ color: '#8b8ba0', fontSize: '18px' }}>No tools found.</p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {filtered.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
-            ))}
-          </div>
-        )}
+        </div>
       </main>
-    </div>
-  )
-}
-
-function ToolCard({ tool }) {
-  const [hovered, setHovered] = useState(false)
-  const accentColor = tool.accent_color || '#7c3aed'
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: 'relative',
-        background: '#13131a',
-        border: `1px solid ${hovered ? accentColor + '50' : '#2a2a3a'}`,
-        borderRadius: '16px', padding: '24px',
-        cursor: 'pointer', transition: 'all 0.2s ease',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? `0 20px 40px ${accentColor}20` : 'none',
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        minHeight: '180px',
-      }}
-    >
-      <div style={{
-        position: 'absolute', top: 0, left: '24px', right: '24px', height: '1px',
-        background: `linear-gradient(90deg, transparent, ${accentColor}60, transparent)`,
-        opacity: hovered ? 1 : 0, transition: 'opacity 0.3s ease',
-      }} />
-
-      <div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '16px', fontWeight: '700', color: 'white',
-              background: `${accentColor}25`, border: `1px solid ${accentColor}40`,
-            }}>
-              {tool.name.charAt(0)}
-            </div>
-            <div>
-              <div style={{ color: 'white', fontWeight: '600', fontSize: '15px' }}>{tool.name}</div>
-              <div style={{ color: '#8b8ba0', fontSize: '12px' }}>{tool.category}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-            {tool.badge && (
-              <span style={{
-                fontSize: '11px', fontWeight: '600', padding: '3px 10px',
-                borderRadius: '999px', whiteSpace: 'nowrap',
-                border: `1px solid ${accentColor}40`,
-                background: `${accentColor}15`, color: accentColor,
-              }}>
-                {tool.badge}
-              </span>
-            )}
-            {tool.is_free && (
-              <span style={{
-                fontSize: '10px', fontWeight: '600', padding: '2px 8px',
-                borderRadius: '999px',
-                border: '1px solid rgba(16,185,129,0.4)',
-                background: 'rgba(16,185,129,0.1)', color: '#34d399',
-              }}>
-                Free
-              </span>
-            )}
-          </div>
-        </div>
-
-        <p style={{ color: '#8b8ba0', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
-          {tool.description}
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '2px' }}>
-            {[1,2,3,4,5].map((i) => (
-              <span key={i} style={{ fontSize: '11px', color: i <= Math.round(tool.rating) ? '#f59e0b' : '#2a2a3a' }}>★</span>
-            ))}
-            <span style={{ fontSize: '11px', color: '#8b8ba0', marginLeft: '4px' }}>{tool.rating}</span>
-          </div>
-          <div style={{ color: '#8b8ba0', fontSize: '11px' }}>
-            {tool.review_count?.toLocaleString()} reviews
-          </div>
-        </div>
-        <a
-          href={tool.url}
-          target={tool.url.startsWith('http') ? '_blank' : '_self'}
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '6px',
-            fontSize: '12px', fontWeight: '600', padding: '6px 14px',
-            borderRadius: '8px', textDecoration: 'none', transition: 'all 0.2s ease',
-            border: `1px solid ${accentColor}40`,
-            background: `${accentColor}10`, color: accentColor,
-          }}
-        >
-          Try it →
-        </a>
-      </div>
     </div>
   )
 }
