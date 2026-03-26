@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 const platforms = ['Facebook/Instagram', 'Google Ads', 'Twitter/X', 'LinkedIn', 'TikTok', 'YouTube']
 const goals = ['Drive Sales', 'Generate Leads', 'Increase Awareness', 'Drive Traffic', 'App Installs', 'Event Signups']
@@ -388,6 +389,7 @@ export default function AdCopyGenerator() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="ad-copy" />
     </div>
   )
 }

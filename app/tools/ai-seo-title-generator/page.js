@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 export default function SeoTitleGenerator() {
   const [form, setForm] = useState({
@@ -340,6 +341,7 @@ export default function SeoTitleGenerator() {
           </div>
         )}
       </main>
+      <ToolSeoSection tool="seo-title" />
     </div>
   )
 }

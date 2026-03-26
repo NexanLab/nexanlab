@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 export default function ColdEmailGenerator() {
   const [form, setForm] = useState({
@@ -350,6 +351,7 @@ export default function ColdEmailGenerator() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="cold-email" />
     </div>
   )
 }

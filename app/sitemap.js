@@ -42,6 +42,50 @@ export default function sitemap() {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    // Eksik olan 2 araç sayfası eklendi
+    {
+      url: 'https://www.nexanlab.com/tools/ai-image-prompt-generator',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.nexanlab.com/tools/ai-regex-generator',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    // Destekleyici sayfalar
+    {
+      url: 'https://www.nexanlab.com/categories',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: 'https://www.nexanlab.com/about',
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: 'https://www.nexanlab.com/blog',
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: 'https://www.nexanlab.com/contact',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: 'https://www.nexanlab.com/submit',
+      lastModified: new Date(),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
     {
       url: 'https://www.nexanlab.com/login',
       lastModified: new Date(),

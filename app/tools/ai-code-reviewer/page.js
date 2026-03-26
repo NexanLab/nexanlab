@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'React', 'Java', 'C++', 'Go', 'Rust', 'PHP', 'SQL']
 const focusAreas = ['All', 'Bugs Only', 'Security Only', 'Performance Only', 'Readability Only']
@@ -381,6 +382,7 @@ export default function CodeReviewer() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="code-reviewer" />
     </div>
   )
 }

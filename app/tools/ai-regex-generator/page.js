@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'PHP', 'Java', 'Go', 'Ruby', 'Rust']
 const availableFlags = ['g (global)', 'i (case insensitive)', 'm (multiline)', 's (dotAll)', 'x (extended)']
@@ -481,6 +482,7 @@ export default function RegexGenerator() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="regex" />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 const aiTools = ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Adobe Firefly', 'Leonardo AI', 'Ideogram']
 const styles = ['Photorealistic', 'Digital Art', 'Oil Painting', 'Watercolor', 'Anime', 'Cinematic', '3D Render', 'Sketch', 'Pixel Art', 'Surrealism']
@@ -457,6 +458,7 @@ export default function ImagePromptGenerator() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="image-prompt" />
     </div>
   )
 }

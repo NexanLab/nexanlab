@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ToolSeoSection from '@/app/components/ToolSeoSection'
 
 const platforms = ['General', 'Shopify', 'Amazon', 'Etsy', 'WooCommerce', 'eBay']
 const tones = ['Professional', 'Friendly', 'Luxury', 'Playful', 'Minimalist', 'Urgent']
@@ -382,6 +383,7 @@ export default function ProductDescriptionGenerator() {
           </div>
         </div>
       </main>
+      <ToolSeoSection tool="product-desc" />
     </div>
   )
 }
