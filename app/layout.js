@@ -47,7 +47,7 @@ export const metadata = {
       "Discover, compare and use the best AI tools. Curated directory of 500+ AI tools.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "NexanLab — Discover the Best AI Tools",
@@ -59,7 +59,7 @@ export const metadata = {
     title: "NexanLab — Discover the Best AI Tools",
     description:
       "Discover, compare and use the best AI tools. Curated directory of 500+ AI tools.",
-    images: ["/og-image.png"],
+    images: ["/opengraph-image"],
     creator: "@nexanlab",
   },
   robots: {
