@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 const platforms = ['General', 'Shopify', 'Amazon', 'Etsy', 'WooCommerce', 'eBay']
 const tones = ['Professional', 'Friendly', 'Luxury', 'Playful', 'Minimalist', 'Urgent']
@@ -57,6 +58,7 @@ export default function ProductDescriptionGenerator() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { resultRef, scrollToResult } = useScrollToResult() 
 
   async function generate() {
     if (!form.productName.trim()) {
@@ -81,6 +83,7 @@ export default function ProductDescriptionGenerator() {
         setError(data.error)
       } else {
         setResult(data.description)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -269,7 +272,7 @@ export default function ProductDescriptionGenerator() {
           </div>
 
           {/* Results */}
-          <div>
+          <div ref={resultRef}>
             {loading && (
               <div style={{
                 background: '#13131a', border: '1px solid #2a2a3a',

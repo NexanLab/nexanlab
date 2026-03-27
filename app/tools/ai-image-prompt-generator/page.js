@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 const aiTools = ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Adobe Firefly', 'Leonardo AI', 'Ideogram']
 const styles = ['Photorealistic', 'Digital Art', 'Oil Painting', 'Watercolor', 'Anime', 'Cinematic', '3D Render', 'Sketch', 'Pixel Art', 'Surrealism']
@@ -66,6 +67,7 @@ export default function ImagePromptGenerator() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [negCopied, setNegCopied] = useState(false)
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function generate() {
     if (!form.subject.trim()) {
@@ -90,6 +92,7 @@ export default function ImagePromptGenerator() {
         setError(data.error)
       } else {
         setResult(data)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -318,7 +321,7 @@ export default function ImagePromptGenerator() {
           </div>
 
           {/* Results */}
-          <div>
+          <div ref={resultRef}>
             {loading && (
               <div style={{
                 background: '#13131a', border: '1px solid #2a2a3a',

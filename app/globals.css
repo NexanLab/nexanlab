@@ -60,15 +60,48 @@ body {
     position: static !important;
   }
 
+  /* ---------- TOOL SAYFALARI GENEL ---------- */
+
+  /* Main padding azalt */
+  main {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 32px !important;
+  }
+
+  /* Tool form kartları */
+  .tool-form-sticky,
+  [style*="borderRadius: '20px'"] {
+    padding: 20px !important;
+  }
+
+  /* Buton/tag grupları taşmasın */
+  [style*="display: 'flex'"][style*="flexWrap: 'wrap'"] {
+    gap: 6px !important;
+  }
+
+  /* Tool sayfası başlık */
+  [style*="textAlign: 'center'"] h1 {
+    font-size: 28px !important;
+  }
+
+  /* Textarea ve input'lar tam genişlik */
+  textarea, input[type="text"], input[type="email"], select {
+    font-size: 16px !important; /* iOS zoom'u engellemek için */
+  }
+
+  /* Code reviewer - textarea daha kısa olsun */
+  textarea[rows="16"] {
+    min-height: 200px !important;
+  }
+
   /* ---------- ABOUT: stats 4 kolon → 2 kolon ---------- */
   .about-stats {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-  /* about values 2 kolon → 1 kolon */
   .about-values {
     grid-template-columns: 1fr !important;
   }
-  /* about CTA butonlar → alt alta */
   .about-cta-btns {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -77,11 +110,10 @@ body {
     text-align: center !important;
   }
 
-  /* ---------- CONTACT: 3 kart → 1 kolon ---------- */
+  /* ---------- CONTACT ---------- */
   .contact-cards {
     grid-template-columns: 1fr !important;
   }
-  /* contact form 2 kolon → 1 kolon */
   .contact-form-grid {
     grid-template-columns: 1fr !important;
   }
@@ -112,7 +144,7 @@ body {
     text-align: center !important;
   }
 
-  /* ---------- PANEL (sidebar → top bar) ---------- */
+  /* ---------- PANEL ---------- */
   .panel-sidebar {
     position: static !important;
     width: 100% !important;
@@ -139,7 +171,7 @@ body {
     grid-template-columns: 1fr !important;
   }
 
-  /* ---------- SEO TITLE: 2 kolon form → 1 kolon ---------- */
+  /* ---------- SEO TITLE FORM ---------- */
   .seo-form-grid {
     grid-template-columns: 1fr !important;
   }
@@ -147,25 +179,59 @@ body {
     grid-column: 1 !important;
   }
 
-  /* ---------- CODE REVIEWER: score card → dikey ---------- */
+  /* ---------- CODE REVIEWER ---------- */
   .score-card {
     flex-direction: column !important;
     text-align: center !important;
   }
 
-  /* ---------- GENEL PADDING DÜZELTME ---------- */
+  /* ---------- GENEL ---------- */
   .mobile-padding {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
+
+  /* Tool sayfası page header margin azalt */
+  [style*="marginBottom: '48px'"][style*="textAlign: 'center'"] {
+    margin-bottom: 32px !important;
+  }
+
+  /* Result kartları padding azalt */
+  [style*="padding: '32px'"] {
+    padding: 20px !important;
+  }
+
+  /* Copy butonları tam genişlik olmasın */
+  [style*="padding: '8px 16px'"] {
+    padding: 8px 12px !important;
+  }
 }
 
 @media (max-width: 480px) {
-  /* Çok küçük ekranlar için ek düzeltmeler */
   .about-stats {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   .hero-stats {
     gap: 16px !important;
+  }
+
+  /* Tool tag seçiciler (platform, tone vs.) */
+  [style*="padding: '6px 14px'"] {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+
+  /* Küçük ekranda result başlığı */
+  [style*="fontSize: '18px'"][style*="fontWeight: '700'"] {
+    font-size: 16px !important;
+  }
+}
+
+/* ============================================
+   MOBILE HAMBURGER MENU
+   ============================================ */
+@media (max-width: 768px) {
+  .home-mobile-menu-btn {
+    display: block !important;
   }
 }

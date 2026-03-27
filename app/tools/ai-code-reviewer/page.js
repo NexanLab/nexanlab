@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'React', 'Java', 'C++', 'Go', 'Rust', 'PHP', 'SQL']
 const focusAreas = ['All', 'Bugs Only', 'Security Only', 'Performance Only', 'Readability Only']
@@ -61,6 +62,7 @@ export default function CodeReviewer() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [improvedCopied, setImprovedCopied] = useState(false)
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function review() {
     if (!form.code.trim()) {
@@ -85,6 +87,7 @@ export default function CodeReviewer() {
         setError(data.error)
       } else {
         setResult(data)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -233,7 +236,7 @@ export default function CodeReviewer() {
           </div>
 
           {/* Results */}
-          <div>
+          <div ref={resultRef}>
             {loading && (
               <div style={{
                 background: '#13131a', border: '1px solid #2a2a3a',

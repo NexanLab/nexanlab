@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 export default function SeoTitleGenerator() {
   const [form, setForm] = useState({
@@ -15,6 +16,7 @@ export default function SeoTitleGenerator() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copiedIndex, setCopiedIndex] = useState(null)
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function generateTitles() {
     if (!form.keyword.trim()) {
@@ -39,6 +41,7 @@ export default function SeoTitleGenerator() {
         setError(data.error)
       } else {
         setTitles(data.titles)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch (err) {
       setError('Something went wrong. Please try again.')
@@ -209,7 +212,7 @@ export default function SeoTitleGenerator() {
 
         {/* Results */}
         {loading && (
-          <div style={{
+          <div ref={resultRef} style={{
             background: '#13131a', border: '1px solid #2a2a3a',
             borderRadius: '20px', padding: '48px',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',

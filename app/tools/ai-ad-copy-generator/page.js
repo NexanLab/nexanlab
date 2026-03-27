@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 const platforms = ['Facebook/Instagram', 'Google Ads', 'Twitter/X', 'LinkedIn', 'TikTok', 'YouTube']
 const goals = ['Drive Sales', 'Generate Leads', 'Increase Awareness', 'Drive Traffic', 'App Installs', 'Event Signups']
 const tones = ['Persuasive', 'Friendly', 'Urgent', 'Professional', 'Playful', 'Inspirational']
+
 
 function CopyCard({ label, value, color = '#7c3aed', maxChars }) {
   const [copied, setCopied] = useState(false)
@@ -66,6 +68,7 @@ export default function AdCopyGenerator() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function generate() {
     if (!form.product.trim()) {
@@ -90,6 +93,7 @@ export default function AdCopyGenerator() {
         setError(data.error)
       } else {
         setResult(data.copy)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -260,7 +264,7 @@ export default function AdCopyGenerator() {
           </div>
 
           {/* Results */}
-          <div>
+          <div ref={resultRef}>
             {loading && (
               <div style={{
                 background: '#13131a', border: '1px solid #2a2a3a',

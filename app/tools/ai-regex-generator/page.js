@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'PHP', 'Java', 'Go', 'Ruby', 'Rust']
 const availableFlags = ['g (global)', 'i (case insensitive)', 'm (multiline)', 's (dotAll)', 'x (extended)']
@@ -21,6 +22,7 @@ export default function RegexGenerator() {
   const [codeCopied, setCodeCopied] = useState(false)
   const [testInput, setTestInput] = useState('')
   const [testResult, setTestResult] = useState(null)
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function generate() {
     if (!form.description.trim()) {
@@ -46,6 +48,7 @@ export default function RegexGenerator() {
         setError(data.error)
       } else {
         setResult(data)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -238,7 +241,7 @@ export default function RegexGenerator() {
           </div>
 
           {/* Results */}
-          <div>
+          <div ref={resultRef}>
             {loading && (
               <div style={{
                 background: '#13131a', border: '1px solid #2a2a3a',

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 
 export default function ColdEmailGenerator() {
   const [form, setForm] = useState({
@@ -17,6 +18,8 @@ export default function ColdEmailGenerator() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+
+  const { resultRef, scrollToResult } = useScrollToResult()
 
   async function generateEmail() {
     if (!form.senderName || !form.recipientCompany || !form.purpose) {
@@ -41,6 +44,7 @@ export default function ColdEmailGenerator() {
         setError(data.error)
       } else {
         setResult(data.email)
+        setTimeout(() => scrollToResult(), 100)
       }
     } catch (err) {
       setError('Something went wrong. Please try again.')
@@ -242,11 +246,13 @@ export default function ColdEmailGenerator() {
           </div>
 
           {/* Result */}
-          <div style={{
-            background: '#13131a', border: '1px solid #2a2a3a',
-            borderRadius: '20px', padding: '32px',
-            display: 'flex', flexDirection: 'column', minHeight: '400px',
-          }}>
+          <div
+            ref={resultRef}
+            style={{
+              background: '#13131a', border: '1px solid #2a2a3a',
+              borderRadius: '20px', padding: '32px',
+              display: 'flex', flexDirection: 'column', minHeight: '400px',
+            }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
               <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>
                 ✉️ Generated Email
