@@ -1,14 +1,28 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
+import { ratelimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const { success } = await ratelimit.limit(ip)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { product, targetAudience, goal, platform, tone } = await request.json()
 
     if (!product) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (product.length > 500) {
+      return NextResponse.json({ error: 'Product description must be under 500 characters.' }, { status: 400 })
     }
 
     const prompt = `Generate ad copy for the following:
@@ -45,7 +59,6 @@ HOOK VARIATION 2: [text]`
     })
 
     const text = completion.choices[0]?.message?.content || ''
-
     const parsed = {}
     const lines = text.split('\n').filter(l => l.trim())
     lines.forEach(line => {

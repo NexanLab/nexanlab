@@ -1,14 +1,28 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
+import { ratelimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const { success } = await ratelimit.limit(ip)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { description, language, examples, flags } = await request.json()
 
     if (!description) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (description.length > 500) {
+      return NextResponse.json({ error: 'Description must be under 500 characters.' }, { status: 400 })
     }
 
     const prompt = `Generate a regular expression for the following requirement:
@@ -40,7 +54,6 @@ NO_MATCH: [another example that should NOT match]`
     })
 
     const text = completion.choices[0]?.message?.content || ''
-
     const regexMatch = text.match(/REGEX:\s*(.+)/i)
     const flagsMatch = text.match(/FLAGS:\s*(.+)/i)
     const explanationMatch = text.match(/EXPLANATION:\s*([\s\S]+?)(?=JAVASCRIPT_EXAMPLE:|$)/i)

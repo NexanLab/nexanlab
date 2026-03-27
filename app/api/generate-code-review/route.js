@@ -1,14 +1,28 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
+import { ratelimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const { success } = await ratelimit.limit(ip)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { code, language, focus } = await request.json()
 
     if (!code) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (code.length > 10000) {
+      return NextResponse.json({ error: 'Code must be under 10,000 characters.' }, { status: 400 })
     }
 
     const prompt = `Review the following ${language || 'code'} and provide a detailed analysis:
@@ -48,8 +62,6 @@ IMPROVED CODE:
     })
 
     const text = completion.choices[0]?.message?.content || ''
-
-    // Parse sections
     const scoreMatch = text.match(/OVERALL SCORE:\s*(\d+\/10)/i)
     const summaryMatch = text.match(/SUMMARY:\s*([\s\S]+?)(?=BUGS:|$)/i)
     const bugsMatch = text.match(/BUGS:\s*([\s\S]+?)(?=SECURITY ISSUES:|$)/i)

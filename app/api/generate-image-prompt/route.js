@@ -1,14 +1,28 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
+import { ratelimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const { success } = await ratelimit.limit(ip)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { subject, style, mood, lighting, camera, extraDetails, aiTool } = await request.json()
 
     if (!subject) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (subject.length > 500) {
+      return NextResponse.json({ error: 'Subject must be under 500 characters.' }, { status: 400 })
     }
 
     const prompt = `Generate 3 different AI image prompts for the following:
@@ -41,7 +55,6 @@ NEGATIVE PROMPT: [things to avoid, comma separated]`
     })
 
     const text = completion.choices[0]?.message?.content || ''
-
     const prompts = []
     const p1 = text.match(/PROMPT 1:\s*([\s\S]+?)(?=PROMPT 2:|$)/i)
     const p2 = text.match(/PROMPT 2:\s*([\s\S]+?)(?=PROMPT 3:|$)/i)

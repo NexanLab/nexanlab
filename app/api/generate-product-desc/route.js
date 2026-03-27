@@ -1,14 +1,32 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
+import { ratelimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
+  const { success } = await ratelimit.limit(ip)
+  if (!success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { productName, keyFeatures, targetAudience, platform, tone, length } = await request.json()
 
     if (!productName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (productName.length > 200) {
+      return NextResponse.json({ error: 'Product name must be under 200 characters.' }, { status: 400 })
+    }
+
+    if (keyFeatures && keyFeatures.length > 500) {
+      return NextResponse.json({ error: 'Key features must be under 500 characters.' }, { status: 400 })
     }
 
     const prompt = `Write a product description with the following details:
@@ -45,10 +63,7 @@ BULLET POINTS:
     })
 
     const text = completion.choices[0]?.message?.content || ''
-
-    // Parse the response
     const parsed = {}
-
     const titleMatch = text.match(/TITLE:\s*(.+)/i)
     const shortMatch = text.match(/SHORT DESCRIPTION:\s*(.+)/i)
     const fullMatch = text.match(/FULL DESCRIPTION:\s*([\s\S]+?)(?=BULLET POINTS:|$)/i)
