@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
+import RateLimitError from '@/app/components/RateLimitError'
 
 const aiTools = ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Adobe Firefly', 'Leonardo AI', 'Ideogram']
 const styles = ['Photorealistic', 'Digital Art', 'Oil Painting', 'Watercolor', 'Anime', 'Cinematic', '3D Render', 'Sketch', 'Pixel Art', 'Surrealism']
@@ -68,6 +69,7 @@ export default function ImagePromptGenerator() {
   const [error, setError] = useState('')
   const [negCopied, setNegCopied] = useState(false)
   const { resultRef, scrollToResult } = useScrollToResult()
+  const [retryAfter, setRetryAfter] = useState(0)
 
   async function generate() {
     if (!form.subject.trim()) {
@@ -90,6 +92,7 @@ export default function ImagePromptGenerator() {
 
       if (data.error) {
         setError(data.error)
+        if (data.retryAfter) setRetryAfter(data.retryAfter)
       } else {
         setResult(data)
         setTimeout(() => scrollToResult(), 100)
@@ -294,7 +297,9 @@ export default function ImagePromptGenerator() {
               />
             </div>
 
-            {error && (
+            {error && retryAfter > 0 ? (
+              <RateLimitError retryAfter={retryAfter} onRetry={generateEmail} />
+            ) : error ? (
               <div style={{
                 padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
@@ -302,7 +307,7 @@ export default function ImagePromptGenerator() {
               }}>
                 {error}
               </div>
-            )}
+            ) : null}
 
             <button
               onClick={generate}

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
+import RateLimitError from '@/app/components/RateLimitError'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'React', 'Java', 'C++', 'Go', 'Rust', 'PHP', 'SQL']
 const focusAreas = ['All', 'Bugs Only', 'Security Only', 'Performance Only', 'Readability Only']
@@ -63,6 +64,7 @@ export default function CodeReviewer() {
   const [error, setError] = useState('')
   const [improvedCopied, setImprovedCopied] = useState(false)
   const { resultRef, scrollToResult } = useScrollToResult()
+  const [retryAfter, setRetryAfter] = useState(0)
 
   async function review() {
     if (!form.code.trim()) {
@@ -85,6 +87,7 @@ export default function CodeReviewer() {
 
       if (data.error) {
         setError(data.error)
+        if (data.retryAfter) setRetryAfter(data.retryAfter)
       } else {
         setResult(data)
         setTimeout(() => scrollToResult(), 100)
@@ -209,7 +212,9 @@ export default function CodeReviewer() {
               />
             </div>
 
-            {error && (
+            {error && retryAfter > 0 ? (
+              <RateLimitError retryAfter={retryAfter} onRetry={generateEmail} />
+            ) : error ? (
               <div style={{
                 padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
@@ -217,7 +222,7 @@ export default function CodeReviewer() {
               }}>
                 {error}
               </div>
-            )}
+            ) : null}
 
             <button
               onClick={review}

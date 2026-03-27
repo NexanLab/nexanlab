@@ -1,16 +1,15 @@
 import Groq from 'groq-sdk'
 import { NextResponse } from 'next/server'
-import { ratelimit } from '@/lib/ratelimit'
+import { checkRateLimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(request) {
   const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
-  const { success } = await ratelimit.limit(ip)
+  const { success, retryAfter } = await checkRateLimit(ip)
   if (!success) {
     return NextResponse.json(
-      { error: 'Too many requests. Please wait a moment and try again.' },
-      { status: 429 }
+      { error: `Too many requests. Please wait ${retryAfter} seconds and try again.`, retryAfter },
     )
   }
 

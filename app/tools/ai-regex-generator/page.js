@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
+import RateLimitError from '@/app/components/RateLimitError'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'PHP', 'Java', 'Go', 'Ruby', 'Rust']
 const availableFlags = ['g (global)', 'i (case insensitive)', 'm (multiline)', 's (dotAll)', 'x (extended)']
@@ -23,6 +24,7 @@ export default function RegexGenerator() {
   const [testInput, setTestInput] = useState('')
   const [testResult, setTestResult] = useState(null)
   const { resultRef, scrollToResult } = useScrollToResult()
+  const [retryAfter, setRetryAfter] = useState(0)
 
   async function generate() {
     if (!form.description.trim()) {
@@ -46,6 +48,7 @@ export default function RegexGenerator() {
 
       if (data.error) {
         setError(data.error)
+        if (data.retryAfter) setRetryAfter(data.retryAfter)
       } else {
         setResult(data)
         setTimeout(() => scrollToResult(), 100)
@@ -214,7 +217,9 @@ export default function RegexGenerator() {
               </div>
             </div>
 
-            {error && (
+            {error && retryAfter > 0 ? (
+              <RateLimitError retryAfter={retryAfter} onRetry={generateEmail} />
+            ) : error ? (
               <div style={{
                 padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
                 background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
@@ -222,7 +227,7 @@ export default function RegexGenerator() {
               }}>
                 {error}
               </div>
-            )}
+            ) : null}
 
             <button
               onClick={generate}
