@@ -76,6 +76,7 @@ NO_MATCH: [another example that should NOT match]`
       regex: regexMatch ? regexMatch[1].trim() : '',
       flags: flagsMatch ? flagsMatch[1].trim() : '',
       explanation: explanationMatch ? explanationMatch[1].trim() : '',
+      
       jsExample: jsMatch ? jsMatch[1].trim() : '',
       testCases,
       raw: text,
