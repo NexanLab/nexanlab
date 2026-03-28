@@ -5,6 +5,7 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 const platforms = ['General', 'Shopify', 'Amazon', 'Etsy', 'WooCommerce', 'eBay']
 const tones = ['Professional', 'Friendly', 'Luxury', 'Playful', 'Minimalist', 'Urgent']
@@ -48,7 +49,7 @@ function CopyBlock({ label, value, color = '#7c3aed' }) {
 }
 
 export default function ProductDescriptionGenerator() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-product-desc', {
     productName: '',
     keyFeatures: '',
     targetAudience: '',

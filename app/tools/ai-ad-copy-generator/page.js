@@ -5,6 +5,7 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 const platforms = ['Facebook/Instagram', 'Google Ads', 'Twitter/X', 'LinkedIn', 'TikTok', 'YouTube']
 const goals = ['Drive Sales', 'Generate Leads', 'Increase Awareness', 'Drive Traffic', 'App Installs', 'Event Signups']
@@ -59,7 +60,7 @@ function CopyCard({ label, value, color = '#7c3aed', maxChars }) {
 }
 
 export default function AdCopyGenerator() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-ad-copy', {
     product: '',
     targetAudience: '',
     goal: 'Drive Sales',

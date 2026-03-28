@@ -5,6 +5,7 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'React', 'Java', 'C++', 'Go', 'Rust', 'PHP', 'SQL']
 const focusAreas = ['All', 'Bugs Only', 'Security Only', 'Performance Only', 'Readability Only']
@@ -54,7 +55,7 @@ function Section({ label, content, color = '#7c3aed' }) {
 }
 
 export default function CodeReviewer() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-code-reviewer', {
     code: '',
     language: 'JavaScript',
     focus: 'All',

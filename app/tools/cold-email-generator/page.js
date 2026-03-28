@@ -5,9 +5,10 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 export default function ColdEmailGenerator() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-cold-email', {
     senderName: '',
     senderRole: '',
     recipientName: '',
@@ -62,8 +63,8 @@ export default function ColdEmailGenerator() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  function resetForm() {
-    setForm({ senderName: '', senderRole: '', recipientName: '', recipientCompany: '', purpose: '', tone: 'professional' })
+  function handleReset() {
+    resetForm()
     setResult('')
     setError('')
   }

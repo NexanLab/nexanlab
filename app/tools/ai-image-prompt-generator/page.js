@@ -5,6 +5,7 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 const aiTools = ['Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Adobe Firefly', 'Leonardo AI', 'Ideogram']
 const styles = ['Photorealistic', 'Digital Art', 'Oil Painting', 'Watercolor', 'Anime', 'Cinematic', '3D Render', 'Sketch', 'Pixel Art', 'Surrealism']
@@ -55,7 +56,7 @@ function PromptCard({ index, prompt, negative }) {
 }
 
 export default function ImagePromptGenerator() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-image-prompt', {
     subject: '',
     style: 'Photorealistic',
     mood: 'Dramatic',

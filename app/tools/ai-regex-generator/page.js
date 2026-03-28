@@ -5,12 +5,13 @@ import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
 import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useFormPersist } from '@/hooks/useFormPersist'
 
 const languages = ['JavaScript', 'Python', 'TypeScript', 'PHP', 'Java', 'Go', 'Ruby', 'Rust']
 const availableFlags = ['g (global)', 'i (case insensitive)', 'm (multiline)', 's (dotAll)', 'x (extended)']
 
 export default function RegexGenerator() {
-  const [form, setForm] = useState({
+  const { form, setForm, resetForm } = useFormPersist('nexanlab-regex',{
     description: '',
     language: 'JavaScript',
     examples: '',
