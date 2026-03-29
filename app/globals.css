@@ -235,3 +235,26 @@ body {
     display: block !important;
   }
 }
+
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #2f2a3a #0a0a0f;
+}
+
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: #0a0a0f;
+  border-radius: 999px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
+  border-radius: 999px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: #3a3a4a;
+}

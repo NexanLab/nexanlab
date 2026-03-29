@@ -1,11 +1,93 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import ToolSeoSection from '@/app/components/ToolSeoSection'
-import { useScrollToResult } from '@/hooks/useScrollToResult'
 import RateLimitError from '@/app/components/RateLimitError'
+import { useScrollToResult } from '@/hooks/useScrollToResult'
 import { useFormPersist } from '@/hooks/useFormPersist'
+
+// Email kartı — varyasyon veya follow-up için
+function EmailCard({ label, subject, body, color, badge }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+  return (
+    <div style={{
+      background: '#0a0a0f', border: `1px solid ${color}30`,
+      borderRadius: '16px', padding: '20px',
+    }}>
+      {/* Card header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px',
+            color, padding: '3px 10px', borderRadius: '999px',
+            background: `${color}15`, border: `1px solid ${color}30`,
+          }}>
+            {label}
+          </span>
+          {badge && (
+            <span style={{
+              fontSize: '10px', fontWeight: '600', color: '#8b8ba0',
+              padding: '2px 8px', borderRadius: '999px',
+              background: 'rgba(255,255,255,0.05)', border: '1px solid #2a2a3a',
+            }}>
+              {badge}
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <a
+            href={mailtoLink}
+            title="Open in email client"
+            style={{
+              padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+              cursor: 'pointer', textDecoration: 'none',
+              background: `${color}10`, border: `1px solid ${color}20`, color,
+            }}
+          >
+            ✉ Open
+          </a>
+          <button onClick={copy} style={{
+            padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600',
+            cursor: 'pointer',
+            background: copied ? 'rgba(16,185,129,0.15)' : `${color}10`,
+            border: copied ? '1px solid rgba(16,185,129,0.3)' : `1px solid ${color}20`,
+            color: copied ? '#34d399' : color,
+          }}>
+            {copied ? '✓' : '📋'}
+          </button>
+        </div>
+      </div>
+
+      {/* Subject */}
+      <div style={{
+        padding: '8px 12px', borderRadius: '8px',
+        background: `${color}08`, border: `1px solid ${color}20`,
+        marginBottom: '12px',
+      }}>
+        <span style={{ color: '#8b8ba0', fontSize: '11px', fontWeight: '600' }}>SUBJECT: </span>
+        <span style={{ color: 'white', fontSize: '13px' }}>{subject}</span>
+      </div>
+
+      {/* Body */}
+      <pre style={{
+        color: '#e2e8f0', fontSize: '13px', lineHeight: '1.7',
+        whiteSpace: 'pre-wrap', fontFamily: "'Segoe UI', system-ui, sans-serif",
+        margin: 0,
+      }}>
+        {body}
+      </pre>
+    </div>
+  )
+}
 
 export default function ColdEmailGenerator() {
   const { form, setForm, resetForm } = useFormPersist('nexanlab-cold-email', {
@@ -16,15 +98,18 @@ export default function ColdEmailGenerator() {
     purpose: '',
     tone: 'professional',
   })
-  const [result, setResult] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
 
-  const { resultRef, scrollToResult } = useScrollToResult()
+  const [variations, setVariations] = useState(null)
+  const [followups, setFollowups] = useState(null)
+  const [activeTab, setActiveTab] = useState('variations') // 'variations' | 'followups'
+  const [loading, setLoading] = useState(false)
+  const [followupLoading, setFollowupLoading] = useState(false)
+  const [error, setError] = useState('')
   const [retryAfter, setRetryAfter] = useState(0)
 
-  async function generateEmail() {
+  const { resultRef, scrollToResult } = useScrollToResult()
+
+  async function generate() {
     if (!form.senderName || !form.recipientCompany || !form.purpose) {
       setError('Please fill in the required fields.')
       return
@@ -32,13 +117,14 @@ export default function ColdEmailGenerator() {
 
     setLoading(true)
     setError('')
-    setResult('')
+    setVariations(null)
+    setFollowups(null)
 
     try {
       const response = await fetch('/api/generate-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, mode: 'variations' }),
       })
 
       const data = await response.json()
@@ -47,26 +133,52 @@ export default function ColdEmailGenerator() {
         setError(data.error)
         if (data.retryAfter) setRetryAfter(data.retryAfter)
       } else {
-        setResult(data.email)
+        setVariations(data.variations)
+        setActiveTab('variations')
         setTimeout(() => scrollToResult(), 100)
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.')
     }
 
     setLoading(false)
   }
 
-  async function copyToClipboard() {
-    await navigator.clipboard.writeText(result)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  async function generateFollowups() {
+    if (!variations) return
+
+    setFollowupLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/generate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, mode: 'followup' }),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        setError(data.error)
+        if (data.retryAfter) setRetryAfter(data.retryAfter)
+      } else {
+        setFollowups(data.followups)
+        setActiveTab('followups')
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+    }
+
+    setFollowupLoading(false)
   }
 
   function handleReset() {
     resetForm()
-    setResult('')
+    setVariations(null)
+    setFollowups(null)
     setError('')
+    setRetryAfter(0)
   }
 
   return (
@@ -78,6 +190,14 @@ export default function ColdEmailGenerator() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         input::placeholder, textarea::placeholder { color: #8b8ba0; }
         select option { background: #13131a; color: white; }
+        textarea {
+          scrollbar-width: thin;
+          scrollbar-color: #2a2a3a #0a0a0f;
+        }
+        textarea::-webkit-scrollbar { width: 6px; }
+        textarea::-webkit-scrollbar-track { background: #0a0a0f; border-radius: 999px; }
+        textarea::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 999px; }
+        textarea::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
         @media (max-width: 768px) {
           .tool-page-grid { grid-template-columns: 1fr !important; }
           .tool-form-sticky { position: static !important; }
@@ -99,12 +219,12 @@ export default function ColdEmailGenerator() {
           <h1 style={{ fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: '900', color: 'white', marginBottom: '16px', letterSpacing: '-1px' }}>
             AI Cold Email Generator
           </h1>
-          <p style={{ color: '#8b8ba0', fontSize: '18px', maxWidth: '500px', margin: '0 auto' }}>
-            Generate personalized, high-converting cold emails in seconds using AI.
+          <p style={{ color: '#8b8ba0', fontSize: '18px', maxWidth: '520px', margin: '0 auto' }}>
+            Generate 3 high-converting email variations + follow-up sequences in seconds.
           </p>
         </div>
 
-        <div className="tool-page-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="tool-page-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '24px' }}>
 
           {/* Form */}
           <div className="tool-form-sticky" style={{
@@ -120,16 +240,10 @@ export default function ColdEmailGenerator() {
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Your Name <span style={{ color: '#7c3aed' }}>*</span>
               </label>
-              <input
-                type="text"
-                value={form.senderName}
+              <input type="text" value={form.senderName}
                 onChange={(e) => setForm({ ...form, senderName: e.target.value })}
                 placeholder="John Doe"
-                style={{
-                  width: '100%', height: '44px', padding: '0 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
-                }}
+                style={{ width: '100%', height: '44px', padding: '0 14px', background: '#0a0a0f', border: '1px solid #2a2a3a', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}
               />
             </div>
 
@@ -137,16 +251,10 @@ export default function ColdEmailGenerator() {
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Your Role / Company
               </label>
-              <input
-                type="text"
-                value={form.senderRole}
+              <input type="text" value={form.senderRole}
                 onChange={(e) => setForm({ ...form, senderRole: e.target.value })}
                 placeholder="CEO at Acme Inc."
-                style={{
-                  width: '100%', height: '44px', padding: '0 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
-                }}
+                style={{ width: '100%', height: '44px', padding: '0 14px', background: '#0a0a0f', border: '1px solid #2a2a3a', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}
               />
             </div>
 
@@ -154,16 +262,10 @@ export default function ColdEmailGenerator() {
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Recipient Name
               </label>
-              <input
-                type="text"
-                value={form.recipientName}
+              <input type="text" value={form.recipientName}
                 onChange={(e) => setForm({ ...form, recipientName: e.target.value })}
                 placeholder="Jane Smith"
-                style={{
-                  width: '100%', height: '44px', padding: '0 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
-                }}
+                style={{ width: '100%', height: '44px', padding: '0 14px', background: '#0a0a0f', border: '1px solid #2a2a3a', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}
               />
             </div>
 
@@ -171,16 +273,10 @@ export default function ColdEmailGenerator() {
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Recipient's Company <span style={{ color: '#7c3aed' }}>*</span>
               </label>
-              <input
-                type="text"
-                value={form.recipientCompany}
+              <input type="text" value={form.recipientCompany}
                 onChange={(e) => setForm({ ...form, recipientCompany: e.target.value })}
                 placeholder="Google, Microsoft..."
-                style={{
-                  width: '100%', height: '44px', padding: '0 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
-                }}
+                style={{ width: '100%', height: '44px', padding: '0 14px', background: '#0a0a0f', border: '1px solid #2a2a3a', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}
               />
             </div>
 
@@ -188,32 +284,39 @@ export default function ColdEmailGenerator() {
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Email Purpose <span style={{ color: '#7c3aed' }}>*</span>
               </label>
-              <textarea
-                value={form.purpose}
-                onChange={(e) => setForm({ ...form, purpose: e.target.value })}
-                placeholder="e.g. I want to offer my web development services and get a meeting..."
-                rows={3}
-                style={{
-                  width: '100%', padding: '12px 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px',
-                  outline: 'none', resize: 'vertical', lineHeight: '1.5',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <textarea
+                  value={form.purpose}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 500) setForm({ ...form, purpose: e.target.value })
+                  }}
+                  placeholder="e.g. I want to offer my web development services and get a meeting..."
+                  rows={3}
+                  style={{
+                    width: '100%', padding: '12px 14px',
+                    background: '#0a0a0f',
+                    border: `1px solid ${form.purpose.length > 450 ? 'rgba(245,158,11,0.5)' : form.purpose.length > 0 ? 'rgba(124,58,237,0.4)' : '#2a2a3a'}`,
+                    borderRadius: '10px', color: 'white', fontSize: '14px',
+                    outline: 'none', resize: 'vertical', lineHeight: '1.5',
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+                  {form.purpose.length > 450 ? (
+                    <p style={{ color: '#f59e0b', fontSize: '11px' }}>⚠ Approaching character limit</p>
+                  ) : <span />}
+                  <span style={{ fontSize: '11px', fontWeight: '600', color: form.purpose.length > 450 ? '#f59e0b' : '#8b8ba0' }}>
+                    {form.purpose.length}/500
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', color: '#8b8ba0', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>
                 Tone
               </label>
-              <select
-                value={form.tone}
-                onChange={(e) => setForm({ ...form, tone: e.target.value })}
-                style={{
-                  width: '100%', height: '44px', padding: '0 14px',
-                  background: '#0a0a0f', border: '1px solid #2a2a3a',
-                  borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none',
-                }}
+              <select value={form.tone} onChange={(e) => setForm({ ...form, tone: e.target.value })}
+                style={{ width: '100%', height: '44px', padding: '0 14px', background: '#0a0a0f', border: '1px solid #2a2a3a', borderRadius: '10px', color: 'white', fontSize: '14px', outline: 'none' }}
               >
                 <option value="professional">Professional</option>
                 <option value="friendly">Friendly</option>
@@ -223,114 +326,122 @@ export default function ColdEmailGenerator() {
               </select>
             </div>
 
-            {error && retryAfter > 0 ? (
-              <RateLimitError retryAfter={retryAfter} onRetry={generateEmail} />
+            {retryAfter > 0 && error ? (
+              <RateLimitError retryAfter={retryAfter} onRetry={generate} />
             ) : error ? (
-              <div style={{
-                padding: '12px 16px', borderRadius: '10px', marginBottom: '16px',
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                color: '#f87171', fontSize: '13px',
-              }}>
+              <div style={{ padding: '12px 16px', borderRadius: '10px', marginBottom: '16px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: '13px' }}>
                 {error}
               </div>
             ) : null}
 
-            <button
-              onClick={generateEmail}
-              disabled={loading}
-              style={{
-                width: '100%', height: '48px',
-                background: loading ? '#4c1d95' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                color: 'white', border: 'none', borderRadius: '12px',
-                fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: loading ? 'none' : '0 0 24px rgba(124,58,237,0.4)',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {loading ? '✦ Generating...' : '✦ Generate Email'}
+            <button onClick={generate} disabled={loading} style={{
+              width: '100%', height: '48px',
+              background: loading ? '#4c1d95' : 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+              color: 'white', border: 'none', borderRadius: '12px',
+              fontSize: '15px', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: loading ? 'none' : '0 0 24px rgba(124,58,237,0.4)',
+              transition: 'all 0.2s ease',
+            }}>
+              {loading ? '✦ Generating...' : '✦ Generate 3 Variations'}
             </button>
+
+            {variations && (
+              <button onClick={handleReset} style={{
+                width: '100%', height: '40px', marginTop: '10px',
+                background: 'transparent', border: '1px solid #2a2a3a',
+                borderRadius: '10px', color: '#8b8ba0', fontSize: '13px', cursor: 'pointer',
+              }}>
+                Reset
+              </button>
+            )}
           </div>
 
-          {/* Result */}
-          <div
-            ref={resultRef}
-            style={{
-              background: '#13131a', border: '1px solid #2a2a3a',
-              borderRadius: '20px', padding: '32px',
-              display: 'flex', flexDirection: 'column', minHeight: '400px',
-            }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>
-                ✉️ Generated Email
-              </h2>
-              {result && (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={copyToClipboard}
-                    style={{
-                      padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
-                      cursor: 'pointer', transition: 'all 0.2s ease',
-                      background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(124,58,237,0.15)',
-                      border: copied ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(124,58,237,0.3)',
-                      color: copied ? '#34d399' : '#a78bfa',
-                    }}
-                  >
-                    {copied ? '✓ Copied!' : '📋 Copy'}
-                  </button>
-                  <button
-                    onClick={resetForm}
-                    style={{
-                      padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600',
-                      cursor: 'pointer', background: 'transparent',
-                      border: '1px solid #2a2a3a', color: '#8b8ba0',
-                    }}
-                  >
-                    Reset
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {loading ? (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                <div style={{
-                  width: '48px', height: '48px', borderRadius: '50%',
-                  border: '3px solid #2a2a3a', borderTop: '3px solid #7c3aed',
-                  animation: 'spin 1s linear infinite',
-                }} />
-                <p style={{ color: '#8b8ba0', fontSize: '14px' }}>AI is writing your email...</p>
+          {/* Results */}
+          <div ref={resultRef}>
+            {loading && (
+              <div style={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '20px', padding: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '3px solid #2a2a3a', borderTop: '3px solid #7c3aed', animation: 'spin 1s linear infinite' }} />
+                <p style={{ color: '#8b8ba0', fontSize: '14px' }}>Writing 3 email variations...</p>
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               </div>
-            ) : result ? (
-              <div style={{
-                flex: 1, background: '#0a0a0f', borderRadius: '12px',
-                padding: '20px', border: '1px solid #2a2a3a', overflowY: 'auto',
-              }}>
-                <pre style={{
-                  color: '#e2e8f0', fontSize: '14px', lineHeight: '1.7',
-                  whiteSpace: 'pre-wrap', fontFamily: "'Segoe UI', system-ui, sans-serif",
-                }}>
-                  {result}
-                </pre>
+            )}
+
+            {variations && !loading && (
+              <div style={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '20px', padding: '28px' }}>
+
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                  <button onClick={() => setActiveTab('variations')} style={{
+                    padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease',
+                    background: activeTab === 'variations' ? '#7c3aed' : 'transparent',
+                    border: activeTab === 'variations' ? '1px solid #7c3aed' : '1px solid #2a2a3a',
+                    color: activeTab === 'variations' ? 'white' : '#8b8ba0',
+                  }}>
+                    ✉ Variations (3)
+                  </button>
+                  <button
+                    onClick={() => followups ? setActiveTab('followups') : generateFollowups()}
+                    disabled={followupLoading}
+                    style={{
+                      padding: '8px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: followupLoading ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease',
+                      background: activeTab === 'followups' ? '#f59e0b' : 'transparent',
+                      border: activeTab === 'followups' ? '1px solid #f59e0b' : '1px solid #2a2a3a',
+                      color: activeTab === 'followups' ? 'white' : '#8b8ba0',
+                    }}
+                  >
+                    {followupLoading ? '⟳ Generating...' : followups ? '🔁 Follow-ups (2)' : '+ Generate Follow-ups'}
+                  </button>
+                </div>
+
+                {/* Variations */}
+                {activeTab === 'variations' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {variations.map((v, i) => (
+                      <EmailCard key={i} label={v.label} subject={v.subject} body={v.body} color={v.color} />
+                    ))}
+                    <button onClick={generate} style={{
+                      width: '100%', height: '44px', background: 'transparent', border: '1px solid #2a2a3a',
+                      borderRadius: '10px', color: '#8b8ba0', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s ease',
+                    }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(124,58,237,0.4)'; e.currentTarget.style.color = 'white' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#2a2a3a'; e.currentTarget.style.color = '#8b8ba0' }}
+                    >
+                      🔄 Regenerate
+                    </button>
+                  </div>
+                )}
+
+                {/* Follow-ups */}
+                {activeTab === 'followups' && followups && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {followups.map((f, i) => (
+                      <EmailCard key={i} label={`Follow-up ${i + 1}`} subject={f.subject} body={f.body} color="#f59e0b" badge={f.day} />
+                    ))}
+                    <button onClick={generateFollowups} style={{
+                      width: '100%', height: '44px', background: 'transparent', border: '1px solid #2a2a3a',
+                      borderRadius: '10px', color: '#8b8ba0', fontSize: '14px', cursor: 'pointer',
+                    }}>
+                      🔄 Regenerate Follow-ups
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                <div style={{
-                  width: '72px', height: '72px', borderRadius: '20px',
-                  background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px',
-                }}>
+            )}
+
+            {!variations && !loading && (
+              <div style={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: '20px', padding: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                <div style={{ width: '72px', height: '72px', borderRadius: '20px', background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
                   ✉️
                 </div>
-                <p style={{ color: '#8b8ba0', fontSize: '15px', textAlign: 'center' }}>
+                <p style={{ color: '#8b8ba0', fontSize: '15px' }}>
                   Fill in the details and click<br />
-                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>Generate Email</span> to get started.
+                  <span style={{ color: '#a78bfa', fontWeight: '600' }}>Generate 3 Variations</span> to get started.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-                  {['Personalized opening', 'Clear value proposition', 'Strong call to action'].map((feature) => (
-                    <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {['3 different angle variations', 'Problem, Value & Curiosity hooks', 'Follow-up sequence included'].map((f) => (
+                    <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: '#7c3aed', fontSize: '14px' }}>✓</span>
-                      <span style={{ color: '#8b8ba0', fontSize: '13px' }}>{feature}</span>
+                      <span style={{ color: '#8b8ba0', fontSize: '13px' }}>{f}</span>
                     </div>
                   ))}
                 </div>
