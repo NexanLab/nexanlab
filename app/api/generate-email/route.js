@@ -5,278 +5,257 @@ import { checkRateLimit } from '@/lib/ratelimit'
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 // ============================================================
+// SIGNATURE — built server-side, never by the model
+// ============================================================
+function buildSignature(senderName, senderRole, lang) {
+  if (lang === 'tr') {
+    // Türkçe standart format (uzmanposta örneğine göre)
+    return `Saygılarımla,\n${senderName}${senderRole ? `\n${senderRole}` : ''}\n[Şirket adınızı ekleyin]\n[Telefon numaranızı ekleyin]`
+  } else {
+    // İngilizce standart format (Grammarly örneğine göre)
+    return `Best regards,\n${senderName}${senderRole ? `\n${senderRole}` : ''}\n[Add your company name]\n[Add your phone number]`
+  }
+}
+
+// ============================================================
 // MASTER SYSTEM PROMPT
 // ============================================================
-const MASTER_SYSTEM_PROMPT = `You are an elite cold email copywriter with 15+ years of experience. You have written cold emails for Y Combinator startups, Fortune 500 companies, and top-performing B2B sales teams — consistently achieving 35-60% open rates and 15-25% reply rates.
+const MASTER_SYSTEM_PROMPT = `You are an elite cold email copywriter with 15+ years of experience writing cold emails for Y Combinator startups, Fortune 500 companies, and top-performing B2B sales teams — consistently achieving 35-60% open rates and 15-25% reply rates.
 
-You are also a native-level writer in both English and Turkish, deeply familiar with professional communication norms in both cultures.
+You are a native-level writer in both English and Turkish.
 
-YOUR CORE PHILOSOPHY:
-- Every word must earn its place. If it doesn't add value, cut it ruthlessly.
-- The reader only cares about ONE thing: "What's in it for me?"
-- Specificity beats generality every single time. "I helped 3 manufacturing companies cut energy costs by 22%" destroys "I help companies save money."
-- The best cold emails feel like they were written by a human who did their homework — not by a marketer running a campaign.
-- A professional email has non-negotiable structure: greeting → opening → body → clear action step → sign-off → signature. Never skip any element.
-- Confident assertions beat hedged guesses. Never write "might", "could possibly", "I think", "perhaps" — state things with conviction.
+CORE PHILOSOPHY:
+- Every word must earn its place. Cut ruthlessly.
+- The reader only cares about: "What's in it for me?"
+- Specificity beats generality. "Reduced costs by 22% for 3 manufacturers" destroys "We help companies save money."
+- Confident assertions only. Never hedge. State facts, not opinions.
 
-PSYCHOLOGICAL PRINCIPLES YOU ALWAYS APPLY:
-1. Pattern interrupt: First sentence must break autopilot — start with THEM, never with you.
-2. Specificity: Concrete numbers, company names, and observations build instant credibility.
-3. Reciprocity: Offer value before asking for anything.
-4. Single ask: One clear, low-friction call to action. Never two.
-5. The "so what" test: After every sentence, ask "so what?" If no answer, delete it.
-6. Loss framing: People respond more to avoiding losses than gaining benefits — use this.
-7. Social proof: Mentioning similar companies or results validates your claim instantly.`
+IRON LAW — CONFIDENCE:
+State everything as FACT or OBSERVATION, never as opinion or guess.
+✗ WRONG: "I believe your costs might be high"
+✓ RIGHT: "Energy costs in your sector rose 28% last year."
+✗ WRONG: "I think we could possibly help"
+✓ RIGHT: "We reduced energy costs by 22% for 3 manufacturers in your sector."
+✗ WRONG: "It is a known fact that..."
+✓ RIGHT: Just state the fact directly.
+
+IRON LAW — SIGNATURE:
+NEVER write a sign-off or signature. The system adds the signature automatically.
+End the email body with the closing question or action step. Stop there. No "Best regards", no name, nothing.`
 
 // ============================================================
-// ENGLISH PROFESSIONAL EMAIL RULES (from Grammarly + expert knowledge)
+// ENGLISH RULES
 // ============================================================
 const ENGLISH_RULES = `
-ENGLISH PROFESSIONAL EMAIL — COMPLETE RULES:
+ENGLISH COLD EMAIL RULES:
 
-SUBJECT LINE:
-- Maximum 50 characters (critical for mobile — longer gets cut off)
-- State the specific topic — no creativity, no clickbait
-- Personalize with their company name or a specific detail
-- Question format works well: "Energy costs at [Company]?"
-- Statement format also works: "[Company] + [Your Company] — quick idea"
-- NEVER USE: "Quick question", "Following up", "Touching base", "Collaboration opportunity", "Partnership proposal"
+SUBJECT LINE (max 50 chars):
+- State the specific topic directly — no clickbait
+- Personalize: "Energy costs at [Company]?" / "[Company] + cost reduction"
+- NEVER: "Quick question" / "Following up" / "Touching base" / "Collaboration"
 
-GREETING (choose based on relationship and tone):
-- Formal, first contact: "Dear Mr./Ms. [Last Name],"
-- Semi-formal (most cold emails): "Hi [First Name]," or "Hello [First Name],"
-- Unknown recipient: "Dear Sir/Madam," or "To whom it may concern,"
-- After greeting: always a comma, then a new line before the opening
+GREETING:
+- Semi-formal: "Hi [First Name],"
+- Formal: "Dear Mr./Ms. [Last Name],"
+- Unknown: "Dear Sir/Madam,"
+- Comma after greeting, new line before body
 
-OPENING LINE — THE MOST IMPORTANT SENTENCE:
-- Must be about THEM, their company, their industry, or their situation — never about you
-- Reference something specific and observable:
-  → "I noticed [Company] recently expanded to [market]..."
-  → "Your [specific product/service] caught my attention because..."
-  → "I came across your LinkedIn post about [specific topic]..."
-  → "[Industry] companies like [Company] typically face [specific problem]..."
-- NEVER START WITH: "I hope this email finds you well", "My name is...", "I wanted to reach out", "I'm reaching out because", "We are a company that..."
+OPENING LINE — MOST CRITICAL:
+- About THEM — stated as fact/observation, never opinion
+- ✓ "Energy costs in manufacturing rose 28% last year — [Company] feels this directly."
+- ✓ "I noticed [Company] recently expanded into [market]."
+- ✗ "I believe your costs might be an issue."
+- ✗ "I think you could benefit from..."
+- ✗ "It is well known that companies like yours..."
+- NEVER START WITH: "I hope this email finds you well" / "My name is" / "I wanted to reach out" / "I'm reaching out because"
 
-BODY — STRUCTURE AND CONTENT:
-- One topic only — never combine multiple requests
-- 2-3 short paragraphs maximum
-- One blank line between paragraphs (critical for readability)
-- Paragraph 1: The problem or observation (1-2 sentences)
-- Paragraph 2: Your value or solution with a specific proof point (1-2 sentences)
-  → Use a real or realistic number: "helped reduce costs by 22%", "3 similar companies", "saved 15 hours/week"
-  → If you don't have a number, use a specific client type: "For manufacturers in [sector]..."
-- Paragraph 3 (optional): Additional context or secondary point (1 sentence max)
-- Spell out every reference — never assume they know what you're talking about
-- Use "you/your" at least 3x more than "I/my/we/our"
-- Active voice always — never passive ("We reduced costs" not "Costs were reduced")
+BODY:
+- One topic only, 2-3 short paragraphs
+- Blank line between paragraphs (critical for readability)
+- Para 1: Specific problem or observation (1-2 sentences, stated as fact)
+- Para 2: Your result with concrete proof (1-2 sentences)
+  → Use realistic numbers: "reduced costs by 22%", "3 similar companies", "saved 40 hours/month"
+- "You/your" used 3x more than "I/my/we/our"
+- Active voice always
 
-CLOSING — THE ACTION STEP (Grammarly principle: always include a clear actionable step):
-- Give them a specific, easy action to take — not just "let me know"
-- Time-specific options work best: "Are you free for a 15-minute call Wednesday or Thursday?"
-- Permission-based also works: "Would it be worth a quick conversation?"
-- Offer something tangible: "I can share a brief analysis of [their specific situation] — want me to send it over?"
-- NEVER USE: "Looking forward to hearing from you", "Hope to connect soon", "Let me know if you're interested", "Please don't hesitate to reach out", "I look forward to your response"
+CLOSING — ACTION STEP:
+- Specific and easy: "Are you free for a 15-minute call Wednesday or Thursday?"
+- Or offer something: "I can share a quick analysis for [Company] — want me to send it over?"
+- NEVER: "Looking forward to hearing from you" / "Let me know if interested" / "Hope to connect"
 
-SIGN-OFF (choose one based on tone):
-- Formal: "Best regards," / "Kind regards," / "Yours sincerely,"
-- Semi-formal (recommended for most cold emails): "Best," / "Thanks," / "Warm regards,"
-- Do NOT use: "Cheers," (too casual for cold outreach), "Yours truly," (old-fashioned)
+STOP after the closing question. DO NOT write any sign-off or signature.
 
-SIGNATURE (always include all 4 lines):
-[Full Name]
-[Job Title] | [Company Name]
-[Phone Number]
-[Email Address]
-
-ABSOLUTE BANNED WORDS AND PHRASES (English):
-"I hope this email finds you well" / "I hope you're doing well"
-"I wanted to reach out" / "I'm reaching out because" / "Just reaching out"
-"My name is [name] and I work at..." (don't introduce yourself in the opening)
-"Please don't hesitate to contact me"
-"Synergy" / "leverage" / "disrupt" / "game-changer" / "innovative solution"
-"Circle back" / "touch base" / "hop on a call" / "ping me"
-"As per my last email" (passive-aggressive)
-"To whom it may concern" (unless truly unknown)
-Starting sentences with "I" three times in a row
-Any form of "might", "could possibly", "I think maybe", "perhaps"`
+BANNED PHRASES:
+"I hope this email finds you well" / "I wanted to reach out" / "I'm reaching out"
+"I believe" / "I think" / "might" / "could possibly" / "perhaps" / "maybe"
+"It is well known" / "It is a known fact" / "As everyone knows"
+"Synergy" / "leverage" / "game-changer" / "circle back" / "touch base"
+"Looking forward to hearing from you" / "Please don't hesitate"
+Starting with "I", "We", "My name is"`
 
 // ============================================================
-// TURKISH PROFESSIONAL EMAIL RULES (from uzmanposta + windowist + expert knowledge)
+// TURKISH RULES
 // ============================================================
 const TURKISH_RULES = `
-TÜRKÇE PROFESYONEL E-POSTA — TAM KURALLAR:
+TÜRKÇE COLD EMAIL KURALLARI:
 
-KONU SATIRI:
-- Maksimum 50 karakter (mobilde daha uzunu kesilir)
-- Mailin içeriğini net ve spesifik olarak özetle
-- Şirket adı veya spesifik detay ile kişiselleştir
-- Soru formatı işe yarar: "Konya Şeker'in Enerji Maliyetleri?"
-- ASLA KULLANMA: "Merhaba", "İşbirliği teklifi", "Tanışma", "Bilgi paylaşımı"
+KONU SATIRI (max 50 karakter):
+- İçeriği net ve spesifik özetle, kişiselleştir
+- ✓ "Konya Şeker'in Enerji Maliyetleri" / "[Şirket] + maliyet azaltma"
+- ✗ "Merhaba" / "İşbirliği teklifi" / "Tanışma"
 
-HİTAP (ilişki ve tone'a göre seç):
-- Resmi, ilk temas: "Sayın [İsim] Bey," veya "Sayın [İsim] Hanım,"
-- Yarı resmi (çoğu cold email için): "Merhaba [İsim],"
-- Kişi bilinmiyorsa: "Sayın Yetkili," veya "İlgili Kişiye,"
-- Hitap satırından sonra: MUTLAKA virgül, ardından yeni satır
+HİTAP:
+- Yarı resmi: "Merhaba [İsim],"
+- Resmi: "Sayın [İsim] Bey," / "Sayın [İsim] Hanım,"
+- Bilinmiyor: "Sayın Yetkili,"
+- Virgül, ardından yeni satır
 
-AÇILIŞ CÜMLESİ — EN KRİTİK CÜMLE:
-- ONLAR hakkında olmalı — şirketleri, sektörleri veya durumları
-- Spesifik ve gözlemlenebilir bir şeye atıfta bulun:
-  → "[Şirket]'in [spesifik faaliyet/durum]'ı dikkatimi çekti..."
-  → "[Sektör]'deki şirketler genellikle [spesifik problem]'le karşılaşıyor..."
-  → "[Son haber/gelişme] nedeniyle size ulaşmak istedim..."
-- ASLA BAŞLAMA: "Umarım iyisinizdir", "Kendimi tanıtmak istiyorum", "Size ulaşmak istedim çünkü", "Biz [şirket adı] olarak...", "Olabileceğini düşünüyorum"
-- "Düşünüyorum", "Sanıyorum", "Belki", "Muhtemelen" gibi belirsiz ifadeler YASAK — iddialı ve net yaz
+AÇILIŞ CÜMLESİ — EN KRİTİK:
+- ONLARI hakkında — gözlem veya veri, asla fikir veya tahmin
+- ✓ "Şeker üretiminde enerji maliyetleri 2023'te sektör genelinde %28 arttı."
+- ✓ "[Şirket]'in [faaliyet]'ı [sonuç] yaratıyor."
+- ✗ "Enerji maliyetlerinizin yüksek olduğuna inanıyorum."
+- ✗ "Büyük ölçekli üreticilerin yüksek maliyetlerle karşılaştığı bilinen bir gerçektir."
+- ASLA BAŞLAMA: "Umarım iyisinizdir" / "Kendimi tanıtmak istiyorum" / "Size ulaşmak istedim" / "Düşünüyorum ki"
 
-GÖVDE — YAPI VE İÇERİK:
-- Sadece bir konu — asla iki farklı talep birleştirme
-- Maksimum 2-3 kısa paragraf
-- Paragraflar arasında bir boş satır bırak (okunabilirlik için kritik)
-- Paragraf 1: Problem veya gözlem (1-2 cümle) — spesifik ve iddialı
-- Paragraf 2: Değerin veya çözümün somut kanıtla (1-2 cümle)
-  → Gerçekçi sayı kullan: "maliyetleri %22 düşürdük", "3 benzer fabrika", "ayda 40 saat tasarruf"
-  → Sayı yoksa spesifik müşteri tipi: "[Sektör]'deki benzer ölçekteki firmalar için..."
-- "Siz/sizin" kullanımı "ben/benim"den 3 kat fazla olmalı
-- Aktif cümle yapısı — pasif değil ("Maliyetleri %20 düşürdük" — "Maliyetler düşürüldü" değil)
-- Her referansı açıkla — alıcının ne hakkında konuştuğunu bildiğini varsayma
+GÖVDE:
+- Tek konu, 2-3 kısa paragraf
+- Paragraflar arasında boş satır (okunabilirlik için kritik)
+- Para 1: Spesifik problem veya gözlem (1-2 cümle, veri olarak)
+- Para 2: Somut sonuç ve kanıt (1-2 cümle)
+  → Gerçekçi sayı: "maliyetleri %22 düşürdük" / "3 benzer fabrika" / "ayda 40 saat tasarruf"
+- "Siz/sizin" kullanımı "ben/benim"den 3 kat fazla
+- Aktif cümle yapısı
 
 KAPANIŞ — AKSİYON ADIMI:
-- Spesifik ve kolayca yanıtlanabilir bir aksiyon ver
-- Zaman spesifik en iyi işe yarar: "Salı veya Çarşamba 15 dakikalık bir görüşme için müsait misiniz?"
-- İzin bazlı da çalışır: "Bu konuyu kısa bir görüşmede ele almak ister misiniz?"
-- Somut bir şey teklif et: "[Şirket]'in mevcut durumu için kısa bir analiz hazırlayabilirim — göndereyim mi?"
-- ASLA KULLANMA: "Dönüşünüzü bekliyorum", "İlgilenirseniz haberdar edin", "Cevabınızı bekliyor olacağım", "Herhangi bir sorunuz olursa çekinmeden yazınız", "Bilgilerinize sunarım"
+- Spesifik: "Salı veya Çarşamba 15 dakikalık görüşme için müsait misiniz?"
+- Somut teklif: "[Şirket] için kısa bir analiz hazırlayabilirim — göndereyim mi?"
+- ASLA: "Dönüşünüzü bekliyorum" / "İlgilenirseniz haberdar edin" / "Cevabınızı bekliyor olacağım"
 
-KAPANIŞ SELAMLAMASI:
-- Resmi: "Saygılarımla," / "Saygılarımızla,"
-- Yarı resmi: "İyi çalışmalar," / "Teşekkürler,"
-- KULLANMA: "Sevgiler," (çok kişisel), "Saygı ve sevgilerimle," (aşırı)
+KAPANIŞ SORUSUNDAN SONRA DUR. İmza veya kapanış selamı YAZMA. Sistem otomatik ekleyecek.
 
-İMZA (her zaman 4 satır):
-[Ad Soyad]
-[Ünvan] | [Şirket Adı]
-[Telefon]
-[E-posta]
-
-TÜRKÇE'DE KESİNLİKLE YASAK İFADELER:
-"Umarım iyisinizdir" / "Umarım bu mail sizi iyi bulur"
-"Kendimi tanıtmak istiyorum" / "Sizinle tanışmak istedim"
-"Size ulaşmak istedim" / "Bu konuda sizinle iletişime geçmek istedim"
-"Olabileceğini düşünüyorum" / "Belki", "Muhtemelen", "Sanıyorum" (belirsizlik yaratan ifadeler)
-"Dönüşünüzü bekliyor olacağım"
-"Bilgilerinize sunarım" (çok soğuk ve resmi)
+YASAK İFADELER:
+"İnanıyorum" / "Düşünüyorum" / "Sanıyorum" / "Belki" / "Muhtemelen" / "Olabilir"
+"Bilinen bir gerçektir" / "Herkesin bildiği gibi"
+"Umarım iyisinizdir" / "Kendimi tanıtmak istiyorum" / "Size ulaşmak istedim"
+"Dönüşünüzü bekliyor olacağım" / "Bilgilerinize sunarım"
 "Herhangi bir sorunuz olursa çekinmeden yazabilirsiniz"
-"Bu maliyetler sizin için önemli olabilir" (gereksiz köprü cümlesi)
+"Bu sizin için önemli olabilir" (gereksiz köprü cümlesi)
 Cümleye "Ben" ile üst üste başlamak`
 
 // ============================================================
 // LANGUAGE DETECTION
 // ============================================================
-function getLanguageRules(purpose) {
-  const turkishPattern = /[çğıöşüÇĞİÖŞÜ]|(\b(ve|ile|için|bir|bu|da|de|ki|mi|mu|mü|mı|ama|veya|gibi|kadar|sonra|önce|hakkında|konusunda|olarak|şirket|ürün|hizmet|istiyorum|yapıyoruz|sunuyoruz)\b)/i
-  const isTurkish = turkishPattern.test(purpose)
-  return isTurkish ? TURKISH_RULES : ENGLISH_RULES
+function detectLanguage(purpose) {
+  const turkishPattern = /[çğıöşüÇĞİÖŞÜ]|(\b(ve|ile|için|bir|bu|da|de|ki|mi|mu|mü|mı|ama|veya|gibi|kadar|sonra|önce|hakkında|konusunda|olarak|şirket|ürün|hizmet|istiyorum|yapıyoruz|sunuyoruz|etmek|olmak)\b)/i
+  return turkishPattern.test(purpose) ? 'tr' : 'en'
 }
 
 // ============================================================
-// VARIATION PROMPT BUILDER
+// APPEND SIGNATURE — called after model output
 // ============================================================
-const buildVariationPrompt = (senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules) => `${MASTER_SYSTEM_PROMPT}
+function appendSignature(body, signature) {
+  if (!body) return ''
+  // Modelin yazdığı imzaları temizle (bazen yine de yazar)
+  const cleaned = body
+    .replace(/\n*(best regards?|kind regards?|yours sincerely|regards|saygılarımla|iyi çalışmalar|teşekkürler)[,.]?\s*\n.*/gi, '')
+    .replace(/\n*\[.*?(imza|signature|isim|soyad|name|title|şirket|company|phone|telefon).*?\]/gi, '')
+    .trimEnd()
+  return `${cleaned}\n\n${signature}`
+}
+
+// ============================================================
+// VARIATION PROMPT
+// ============================================================
+const buildVariationPrompt = (senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules, lang) => `${MASTER_SYSTEM_PROMPT}
 
 ${languageRules}
 
 ---
-DETECT LANGUAGE: Read the "Purpose" field carefully. If it contains Turkish characters or Turkish words, write ALL emails in Turkish. Otherwise write in English. Never mix languages.
-
-NOW WRITE 3 HIGH-CONVERTING COLD EMAIL VARIATIONS:
+NOW WRITE 3 COLD EMAIL VARIATIONS:
 
 Sender: ${senderName}${senderRole ? `, ${senderRole}` : ''}
-Recipient: ${recipientName || 'the decision maker'} at ${recipientCompany}
+Recipient: ${recipientName || (lang === 'tr' ? 'yetkili kişi' : 'the decision maker')} at ${recipientCompany}
 Purpose/Goal: ${purpose}
 Tone: ${tone || 'professional'}
+Language: ${lang === 'tr' ? 'TURKISH — write everything in Turkish' : 'ENGLISH — write everything in English'}
 
-Write 3 completely different emails using these 3 proven angles:
+━━━ VARIATION A: PROBLEM ANGLE (PAS Framework) ━━━
+Open with a specific painful problem — stated as FACT not opinion.
+"Companies at this scale face X" — NOT "You might face X"
+Agitate briefly → bridge to solution.
 
-━━━ VARIATION A: THE PROBLEM ANGLE (PAS Framework) ━━━
-Strategy: Open by naming a specific, painful problem this company likely faces. State it as a FACT, not a guess ("Manufacturing companies at your scale face X" — not "You might face X"). Briefly show the consequence. Bridge naturally to your solution.
-Forbidden: Any hedging words (might, could, perhaps, I think)
-The reader should feel: "How did they know about this exact problem?"
+━━━ VARIATION B: VALUE ANGLE (Result-First) ━━━
+Open with the specific result you deliver + a concrete number.
+Connect directly to THEIR business immediately.
 
-━━━ VARIATION B: THE VALUE ANGLE (Result-First Framework) ━━━  
-Strategy: Open with the specific result you deliver, stated confidently. Include a concrete number or comparison (even if estimated: "for companies like yours"). Immediately connect that result to THEIR business context.
-The reader should feel: "That result would directly impact our bottom line."
+━━━ VARIATION C: INSIGHT ANGLE (Pattern Interrupt) ━━━
+Open with a surprising industry insight or counterintuitive observation — stated as data.
+Bridge from insight to offer naturally.
 
-━━━ VARIATION C: THE INSIGHT ANGLE (Pattern Interrupt Framework) ━━━
-Strategy: Open with a surprising industry insight, a counterintuitive data point, or a bold observation about their specific situation. Make them think "I've never thought about it that way." Then bridge naturally from that insight to your offer.
-The reader should feel: "This person actually understands our industry."
-
-QUALITY STANDARDS — ALL 3 EMAILS:
-✓ Max 150 words (including greeting and signature)
-✓ Complete structure: greeting → opening → body → clear action step → sign-off → signature
-✓ First sentence is about THEM, never about you
-✓ Every claim is specific — no vague generalities
-✓ Exactly ONE clear action step at the end
-✓ Blank line between every paragraph
-✓ Sounds like a smart human, not AI or a marketing template
+QUALITY CHECKLIST — every email MUST pass ALL:
+✓ Max 150 words (body only, no signature)
+✓ Greeting → opening → body → ONE action step. Then STOP.
+✓ First sentence is about THEM
+✓ Zero hedging: no believe/think/might/could/perhaps/inanıyorum/düşünüyorum/belki
+✓ Zero filler sentences
+✓ Blank line between paragraphs
 ✓ Subject line under 50 characters
+✓ NO sign-off, NO name, NO signature at the end
 
-FORMAT — use EXACTLY this, nothing else:
+FORMAT (exact):
 VARIATION_A_SUBJECT: [subject]
 VARIATION_A_BODY:
-[complete email]
+[email body — no signature]
 ---
 VARIATION_B_SUBJECT: [subject]
 VARIATION_B_BODY:
-[complete email]
+[email body — no signature]
 ---
 VARIATION_C_SUBJECT: [subject]
 VARIATION_C_BODY:
-[complete email]`
+[email body — no signature]`
 
 // ============================================================
-// FOLLOW-UP PROMPT BUILDER
+// FOLLOW-UP PROMPT
 // ============================================================
-const buildFollowupPrompt = (senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules) => `${MASTER_SYSTEM_PROMPT}
+const buildFollowupPrompt = (senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules, lang) => `${MASTER_SYSTEM_PROMPT}
 
 ${languageRules}
 
 ---
-DETECT LANGUAGE from the Purpose field and write ALL follow-ups in that language.
-
 WRITE 2 STRATEGIC FOLLOW-UP EMAILS:
 
 Sender: ${senderName}${senderRole ? `, ${senderRole}` : ''}
-Recipient: ${recipientName || 'the decision maker'} at ${recipientCompany}
+Recipient: ${recipientName || (lang === 'tr' ? 'yetkili kişi' : 'the decision maker')} at ${recipientCompany}
 Original purpose: ${purpose}
 Tone: ${tone || 'professional'}
+Language: ${lang === 'tr' ? 'TURKISH' : 'ENGLISH'}
 
-━━━ FOLLOW-UP 1: THE VALUE ADD (Send: Day 3-4) ━━━
-Strategy: Never just "bump" the email. Add NEW, genuinely useful value — a relevant industry stat, a quick insight, a short case study, a useful resource, or a question that makes them think. Make it valuable even if they never reply.
-Structure:
-- One sentence referencing the first email (max)
-- 2-3 sentences of NEW value (insight, result, resource, or observation specific to their company/industry)
-- One softer CTA — easier to say yes than the first email
-- Max 100 words total
-- Include greeting and full signature
+━━━ FOLLOW-UP 1: VALUE ADD (Day 3-4) ━━━
+Do NOT just bump. Add NEW genuinely useful value: industry stat, insight, case study, or resource.
+- One sentence referencing first email
+- 2-3 sentences of NEW value specific to their industry
+- One softer CTA
+- Max 100 words body
+- NO sign-off, NO signature
 
-━━━ FOLLOW-UP 2: THE GRACEFUL EXIT (Send: Day 7-10) ━━━
-Strategy: The "breakup" email. Paradoxically, this often gets the highest reply rate because removing pressure triggers a response. Be confident and warm — zero desperation.
-Structure:
-- Direct, brief opening: make clear this is the last message
-- One sentence on what you offer, phrased as leaving the door permanently open
-- One final, low-pressure question or "if timing ever changes" statement
-- Warm, professional close — no guilt, no urgency, no pressure
-- Max 80 words total
-- Include greeting and full signature
+━━━ FOLLOW-UP 2: GRACEFUL EXIT (Day 7-10) ━━━
+The "breakup" email. Confident, warm, zero desperation.
+- Clear: this is the last message
+- One sentence leaving the door open
+- One final low-pressure question
+- Max 80 words body
+- NO sign-off, NO signature
 
-FORMAT — use EXACTLY this:
+FORMAT:
 FOLLOWUP1_SUBJECT: [subject]
 FOLLOWUP1_BODY:
-[complete email]
+[email body — no signature]
 ---
 FOLLOWUP2_SUBJECT: [subject]
 FOLLOWUP2_BODY:
-[complete email]`
+[email body — no signature]`
 
 // ============================================================
 // API HANDLER
@@ -301,15 +280,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Purpose must be under 500 characters.' }, { status: 400 })
     }
 
-    const languageRules = getLanguageRules(purpose)
+    const lang = detectLanguage(purpose)
+    const languageRules = lang === 'tr' ? TURKISH_RULES : ENGLISH_RULES
+    const signature = buildSignature(senderName, senderRole, lang)
 
-    // Follow-up mode
+    // FOLLOW-UP MODE
     if (mode === 'followup') {
       const completion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
         messages: [{
           role: 'user',
-          content: buildFollowupPrompt(senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules)
+          content: buildFollowupPrompt(senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules, lang)
         }],
         max_tokens: 1200,
         temperature: 0.8,
@@ -317,42 +298,43 @@ export async function POST(request) {
 
       const text = completion.choices[0]?.message?.content || ''
       const f1Subject = text.match(/FOLLOWUP1_SUBJECT:\s*(.+)/i)?.[1]?.trim() || ''
-      const f1Body = text.match(/FOLLOWUP1_BODY:\s*([\s\S]+?)(?=---|FOLLOWUP2|$)/i)?.[1]?.trim() || ''
+      const f1BodyRaw = text.match(/FOLLOWUP1_BODY:\s*([\s\S]+?)(?=---|FOLLOWUP2|$)/i)?.[1]?.trim() || ''
       const f2Subject = text.match(/FOLLOWUP2_SUBJECT:\s*(.+)/i)?.[1]?.trim() || ''
-      const f2Body = text.match(/FOLLOWUP2_BODY:\s*([\s\S]+?)$/i)?.[1]?.trim() || ''
+      const f2BodyRaw = text.match(/FOLLOWUP2_BODY:\s*([\s\S]+?)$/i)?.[1]?.trim() || ''
 
       return NextResponse.json({
         followups: [
-          { subject: f1Subject, body: f1Body, day: 'Day 3-4' },
-          { subject: f2Subject, body: f2Body, day: 'Day 7-10' },
+          { subject: f1Subject, body: appendSignature(f1BodyRaw, signature), day: 'Day 3-4' },
+          { subject: f2Subject, body: appendSignature(f2BodyRaw, signature), day: 'Day 7-10' },
         ]
       })
     }
 
-    // Variation mode
+    // VARIATION MODE
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{
         role: 'user',
-        content: buildVariationPrompt(senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules)
+        content: buildVariationPrompt(senderName, senderRole, recipientName, recipientCompany, purpose, tone, languageRules, lang)
       }],
       max_tokens: 1800,
       temperature: 0.85,
     })
 
     const text = completion.choices[0]?.message?.content || ''
+
     const aSubject = text.match(/VARIATION_A_SUBJECT:\s*(.+)/i)?.[1]?.trim() || ''
-    const aBody = text.match(/VARIATION_A_BODY:\s*([\s\S]+?)(?=---|VARIATION_B|$)/i)?.[1]?.trim() || ''
+    const aBodyRaw = text.match(/VARIATION_A_BODY:\s*([\s\S]+?)(?=---|VARIATION_B|$)/i)?.[1]?.trim() || ''
     const bSubject = text.match(/VARIATION_B_SUBJECT:\s*(.+)/i)?.[1]?.trim() || ''
-    const bBody = text.match(/VARIATION_B_BODY:\s*([\s\S]+?)(?=---|VARIATION_C|$)/i)?.[1]?.trim() || ''
+    const bBodyRaw = text.match(/VARIATION_B_BODY:\s*([\s\S]+?)(?=---|VARIATION_C|$)/i)?.[1]?.trim() || ''
     const cSubject = text.match(/VARIATION_C_SUBJECT:\s*(.+)/i)?.[1]?.trim() || ''
-    const cBody = text.match(/VARIATION_C_BODY:\s*([\s\S]+?)$/i)?.[1]?.trim() || ''
+    const cBodyRaw = text.match(/VARIATION_C_BODY:\s*([\s\S]+?)$/i)?.[1]?.trim() || ''
 
     return NextResponse.json({
       variations: [
-        { label: 'Problem-Focused', subject: aSubject, body: aBody, color: '#ef4444' },
-        { label: 'Value-Focused', subject: bSubject, body: bBody, color: '#7c3aed' },
-        { label: 'Curiosity-Focused', subject: cSubject, body: cBody, color: '#f59e0b' },
+        { label: 'Problem-Focused', subject: aSubject, body: appendSignature(aBodyRaw, signature), color: '#ef4444' },
+        { label: 'Value-Focused', subject: bSubject, body: appendSignature(bBodyRaw, signature), color: '#7c3aed' },
+        { label: 'Curiosity-Focused', subject: cSubject, body: appendSignature(cBodyRaw, signature), color: '#f59e0b' },
       ]
     })
 
