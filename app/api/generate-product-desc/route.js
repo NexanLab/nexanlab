@@ -4,6 +4,24 @@ import { checkRateLimit } from '@/lib/ratelimit'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
+const PLATFORM_HINTS = {
+  Amazon: 'Focus on keyword-rich copy, backend search terms, and scan-friendly bullet points. Use capitalized benefit phrases.',
+  Etsy: 'Use warm, handcrafted storytelling. Emphasize uniqueness, craftsmanship, and gift potential.',
+  Shopify: 'Write brand-forward copy with a clear CTA feel. Emphasize lifestyle benefits and brand identity.',
+  WooCommerce: 'SEO-first copy. Use natural keyword placement and clear feature-to-benefit mapping.',
+  eBay: 'Be specific and factual. Include condition, specs, and compatibility. Build trust through detail.',
+  General: 'Write balanced, professional copy suitable for any e-commerce platform.',
+}
+
+const MAX_LENGTHS = {
+  productName: 200,
+  keyFeatures: 1000,
+  targetAudience: 200,
+  tone: 50,
+  platform: 50,
+  length: 50,
+}
+
 export async function POST(request) {
   const ip = request.headers.get('x-forwarded-for') ?? 'anonymous'
   const { success, retryAfter } = await checkRateLimit(ip)
@@ -15,21 +33,34 @@ export async function POST(request) {
   }
 
   try {
-    const { productName, keyFeatures, targetAudience, platform, tone, length } = await request.json()
+    let { productName, keyFeatures, targetAudience, platform, tone, length, onlySection } = await request.json()
+
+    // Sanitize
+    productName = String(productName || '').slice(0, MAX_LENGTHS.productName).trim()
+    keyFeatures = String(keyFeatures || '').slice(0, MAX_LENGTHS.keyFeatures).trim()
+    targetAudience = String(targetAudience || '').slice(0, MAX_LENGTHS.targetAudience).trim()
+    tone = String(tone || '').slice(0, MAX_LENGTHS.tone).trim()
+    platform = String(platform || '').slice(0, MAX_LENGTHS.platform).trim()
+    length = String(length || '').slice(0, MAX_LENGTHS.length).trim()
 
     if (!productName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    if (productName.length > 200) {
-      return NextResponse.json({ error: 'Product name must be under 200 characters.' }, { status: 400 })
+    const platformHint = PLATFORM_HINTS[platform] || PLATFORM_HINTS.General
+
+    const sectionInstructions = {
+      title: 'Generate ONLY the TITLE line. Format: TITLE: [text]',
+      short: 'Generate ONLY the SHORT DESCRIPTION line. Format: SHORT DESCRIPTION: [text]',
+      full: 'Generate ONLY the FULL DESCRIPTION section. Format: FULL DESCRIPTION: [text]',
+      bullets: 'Generate ONLY the BULLET POINTS section. Format:\nBULLET POINTS:\n[emoji] [point 1]\n...',
     }
 
-    if (keyFeatures && keyFeatures.length > 500) {
-      return NextResponse.json({ error: 'Key features must be under 500 characters.' }, { status: 400 })
-    }
+    const sectionFocus = onlySection ? `\n\nIMPORTANT: ${sectionInstructions[onlySection]}` : ''
 
-    const prompt = `Write a product description with the following details:
+    const prompt = `You are an expert e-commerce copywriter. ${platformHint}
+    
+Write a product description with the following details:
 
 Product Name: ${productName}
 Key Features: ${keyFeatures || 'Not specified'}
@@ -54,30 +85,39 @@ BULLET POINTS:
 [emoji] [point 2]
 [emoji] [point 3]
 [emoji] [point 4]
-[emoji] [point 5]`
+[emoji] [point 5] ${sectionFocus}`
 
-    const completion = await groq.chat.completions.create({
+    const stream = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 800,
+      stream: true,
     })
 
-    const text = completion.choices[0]?.message?.content || ''
-    const parsed = {}
-    const titleMatch = text.match(/TITLE:\s*(.+)/i)
-    const shortMatch = text.match(/SHORT DESCRIPTION:\s*(.+)/i)
-    const fullMatch = text.match(/FULL DESCRIPTION:\s*([\s\S]+?)(?=BULLET POINTS:|$)/i)
-    const bulletsMatch = text.match(/BULLET POINTS:\s*([\s\S]+?)$/i)
+    const encoder = new TextEncoder()
 
-    if (titleMatch) parsed.title = titleMatch[1].trim()
-    if (shortMatch) parsed.short = shortMatch[1].trim()
-    if (fullMatch) parsed.full = fullMatch[1].trim()
-    if (bulletsMatch) {
-      const bulletLines = bulletsMatch[1].trim().split('\n').filter(l => l.trim())
-      parsed.bullets = bulletLines
-    }
+    const readable = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const text = chunk.choices[0]?.delta?.content || ''
+            if (text) {
+              controller.enqueue(encoder.encode(text))
+            }
+          }
+        } finally {
+          controller.close()
+        }
+      },
+    })
 
-    return NextResponse.json({ description: parsed, raw: text })
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Transfer-Encoding': 'chunked',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    })
   } catch (error) {
     console.error('Groq error:', error)
     return NextResponse.json({ error: 'Failed to generate description' }, { status: 500 })
